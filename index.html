@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CinéScore Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --imdb-yellow: #f5c518;
+            --bg-p: #000000;
+            --bg-card: #121212;
+            --t-p: #ffffff;
+            --t-s: #a2a2a2;
+            
+            /* Couleurs des notes */
+            --rate-green: #4caf50;
+            --rate-yellow: #fdd835;
+            --rate-orange: #ff9800;
+            --rate-red: #f44336;
+        }
+
+        body { 
+            background: var(--bg-p); color: var(--t-p); 
+            font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 70px;
+            overflow-x: hidden;
+        }
+
+        /* NAVIGATION BASSE */
+        .must-tab-bar {
+            position: fixed; bottom: 0; width: 100%; height: 60px;
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #222; z-index: 9999;
+        }
+        .tab-item { display: flex; flex-direction: column; align-items: center; opacity: 0.5; flex: 1; cursor: pointer; }
+        .tab-item.active { opacity: 1; color: var(--imdb-yellow); }
+        .tab-emoji { font-size: 18px; }
+        .tab-label { font-size: 8px; font-weight: 700; text-transform: uppercase; margin-top: 2px; text-align: center; }
+
+        /* TITRES ET SECTIONS */
+        .header-ios { padding: 20px 15px 10px; }
+        .header-ios h1 { font-size: 24px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: -0.5px; }
+        .section-title { font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--imdb-yellow); padding: 15px; text-transform: uppercase; }
+
+        /* SCROLL HORIZONTAL */
+        .h-scroll { display: flex; overflow-x: auto; gap: 12px; padding: 0 15px 15px; scroll-snap-type: x mandatory; }
+        .h-scroll::-webkit-scrollbar { display: none; }
+        
+        /* CARTES POSTERS RECTANGULAIRES */
+        .poster-card { flex: 0 0 120px; aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; background: #1a1a1a; position: relative; border: 1px solid #333; scroll-snap-align: start; cursor: pointer; }
+        .poster-card img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* AFFICHE MANQUANTE JAUNE */
+        .no-poster { 
+            background: var(--imdb-yellow); color: #000; width: 100%; height: 100%; 
+            display: flex; align-items: center; justify-content: center; 
+            text-align: center; font-weight: 900; font-size: 10px; padding: 5px; box-sizing: border-box; text-transform: uppercase; word-wrap: break-word;
+        }
+
+        /* GRILLES */
+        .grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 15px 15px; }
+        .grid-5col { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 0 15px 15px; }
+        .genre-btn { background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+
+        /* RECHERCHE */
+        .search-bar { margin: 0 15px 15px; background: #1a1a1a; padding: 12px; border-radius: 10px; display: flex; align-items: center; border: 1px solid #333; }
+        .search-bar input { background: transparent; border: none; color: white; margin-left: 10px; width: 100%; outline: none; font-size: 16px; font-weight: 600;}
+
+        /* CRITIQUES */
+        .btn-big-add { 
+            background: var(--imdb-yellow); color: black; font-size: 30px; font-weight: 900; 
+            width: 60px; height: 60px; border-radius: 30px; display: flex; align-items: center; justify-content: center; 
+            margin: 20px auto; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 197, 24, 0.4); border: none;
+        }
+        .review-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; margin: 0 15px 15px; display: flex; gap: 15px; }
+        .review-poster { width: 60px; aspect-ratio: 2/3; border-radius: 6px; object-fit: cover; }
+        .review-note { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; padding: 4px 8px; border-radius: 6px; display: inline-block; color: black; }
+        .review-text { font-size: 12px; color: #ccc; margin-top: 8px; line-height: 1.4; }
+
+        /* STATS (RUBAN) */
+        .stats-ribbon { display: flex; justify-content: space-around; background: var(--bg-card); padding: 15px; margin: 15px; border-radius: 12px; border: 1px solid #222; }
+        .stat-box { text-align: center; }
+        .stat-val { display: block; font-size: 24px; font-family: 'Orbitron'; font-weight: 900; color: var(--imdb-yellow); }
+        .stat-lbl { font-size: 9px; color: var(--t-s); text-transform: uppercase; font-weight: 700; margin-top: 4px;}
+
+        /* MODALS (Fenêtres) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; overflow-y: auto; padding-bottom: 50px;}
+        .modal-content { padding: 20px; }
+        .close-btn { color: var(--imdb-yellow); font-weight: 900; margin-bottom: 20px; cursor: pointer; display: inline-block; text-transform: uppercase; font-size: 14px;}
+        
+        /* FORMULAIRES */
+        textarea { width: 100%; background: #111; color: white; border: 1px solid #333; border-radius: 8px; padding: 15px; box-sizing: border-box; min-height: 120px; font-family: 'Inter'; margin-top: 10px; }
+        .rate-input { width: 100%; padding: 15px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; font-size: 18px; font-weight: 900; }
+        .save-btn { width: 100%; background: var(--imdb-yellow); color: black; border: none; padding: 15px; border-radius: 8px; font-weight: 900; margin-top: 15px; text-transform: uppercase; cursor: pointer; }
+
+        /* BADGES */
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(200,0,0,0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; z-index: 10; border: none; cursor: pointer; }
+        .rank-badge { position: absolute; top: 5px; left: 5px; background: var(--imdb-yellow); color: black; padding: 2px 6px; border-radius: 4px; font-weight: 900; font-size: 12px; z-index: 5; }
+
+        /* CUSTOM BRANDING */
+        .brand-title {
+            text-align: center; font-family: 'Orbitron', sans-serif; 
+            color: #4caf50; font-size: 18px; font-weight: 900; 
+            letter-spacing: 1px; padding-top: 20px;
+        }
+        .brand-title span { color: white; font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 400;}
+    </style>
+</head>
+<body>
+
+    <div id="view"></div>
+
+    <div id="fullModal" class="modal">
+        <div class="modal-content">
+            <div class="close-btn" onclick="closeModal()">← Retour</div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <nav class="must-tab-bar">
+        <div class="tab-item active" onclick="renderSorties()">
+            <span class="tab-emoji">🍿</span>
+            <span class="tab-label">Nouv.<br>Sorties</span>
+        </div>
+        <div class="tab-item" onclick="renderSearch()">
+            <span class="tab-emoji">🔍</span>
+            <span class="tab-label">Recherche</span>
+        </div>
+        <div class="tab-item" onclick="renderMesTop()">
+            <span class="tab-emoji">🏆</span>
+            <span class="tab-label">Mes Tops</span>
+        </div>
+        <div class="tab-item" onclick="renderCritiques()">
+            <span class="tab-emoji">✍️</span>
+            <span class="tab-label">Mes Critiques</span>
+        </div>
+    </nav>
+
+    <script>
+        const API_KEY = "f59231e7c7085af32a303eb181358453";
+        const IMG_PATH = "https://image.tmdb.org/t/p/w500";
+
+        let db = JSON.parse(localStorage.getItem('cineScoreProDB')) || {
+            tops: { movies: [], series: [], actors: [] },
+            reviews: []
+        };
+
+        function saveDB() {
+            localStorage.setItem('cineScoreProDB', JSON.stringify(db));
+        }
+
+        function setActive(index) {
+            document.querySelectorAll('.tab-item').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('fullModal').style.display = 'none';
+            document.getElementById('modal-body').innerHTML = ''; // Coupe les vidéos
+        }
+
+        // --- ONGLET 1 : NOUVELLES SORTIES ---
+        async function renderSorties() {
+            setActive(0);
+            document.getElementById('view').innerHTML = `
+                <div class="header-ios"><h1>Nouvelles Sorties</h1></div>
+                <div class="section-title">Bandes-annonces du moment</div>
+                <div id="trailers-container"><div style="text-align:center; padding:20px; color:var(--imdb-yellow);">Recherche des bandes-annonces...</div></div>
+            `;
+
+            try {
+                // Actualisation des tendances du jour via l'API
+                const res = await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${API_KEY}&language=fr-FR`);
+                const data = await res.json();
+                
+                let trailersHTML = '';
+                // On cherche les vidéos pour les 10 premiers films tendances
+                for (let i = 0; i < 10; i++) {
+                    let m = data.results[i];
+                    if(!m) continue;
+                    
+                    const vRes = await fetch(`https://api.themoviedb.org/3/movie/${m.id}/videos?api_key=${API_KEY}`);
+                    const vData = await vRes.json();
+                    
+                    // On cherche spécifiquement un "Trailer" sur "YouTube"
+                    const trailer = vData.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+                    
+                    if (trailer) {
+                        trailersHTML += `
+                            <div style="margin: 0 15px 15px; position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden; border: 1px solid #333; cursor:pointer;" onclick="playTrailer('${trailer.key}')">
+                                <img src="${IMG_PATH + m.backdrop_path}" style="width:100%; height:100%; object-fit:cover;">
+                                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:30px; color:var(--imdb-yellow); background:rgba(0,0,0,0.7); border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; padding-left:5px;">▶</div>
+                                <div style="position:absolute; bottom:0; left:0; width:100%; padding:30px 15px 10px; background:linear-gradient(transparent, black); box-sizing:border-box;">
+                                    <div style="font-weight:900; font-size:16px;">${m.title}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                document.getElementById('trailers-container').innerHTML = trailersHTML || "<div style='padding:15px;'>Aucune bande-annonce trouvée.</div>";
+            } catch(e) {
+                document.getElementById('trailers-container').innerHTML = "<div style='padding:15px;'>Erreur de chargement.</div>";
+            }
+        }
+
+        // Lancer la vidéo YouTube
+        function playTrailer(ytKey) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
+            modal.style.display = 'block';
+            body.innerHTML = `
+                <iframe width="100%" height="250" src="https://www.youtube.com/embed/${ytKey}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:12px; border:none; margin-top:20px;"></iframe>
+            `;
+        }
+
+
+        // --- ONGLET 2 : RECHERCHE ---
+        async function renderSearch() {
+            setActive(1);
+            document.getElementById('view').innerHTML = `
+                <div class="header-ios"><h1>Recherche</h1></div>
+                <div class="search-bar">🔍 <input type="text" id="searchInput" placeholder="Taper un film, série ou acteur..." oninput="executeSearch(this.value)"></div>
+                <div id="search-results-area"></div>
+            `;
+            // Charge la page par défaut sans effacer la barre de recherche
+            loadPopularActors();
+        }
+
+        async function loadPopularActors() {
+            const area = document.getElementById('search-results-area');
+            area.innerHTML = `<div style="text-align:center; padding:20px; color:var(--imdb-yellow); font-family:'Orbitron';">Chargement...</div>`;
+            const actRes = await fetch(`https://api.themoviedb.org/3/person/popular?api_key=${API_KEY}&language=fr-FR`);
+            const actors = await actRes.json();
+            
+            area.innerHTML = `
+                <div class="section-title">Acteurs Populaires</div>
+                <div class="grid-5col">
+                    ${actors.results.slice(0, 15).map(a => `
+                        <div class="poster-card" onclick="renderActorProfile(${a.id})" style="width:100%; aspect-ratio: 2/3;">
+                            ${a.profile_path ? `<img src="${IMG_PATH + a.profile_path}">` : `<div class="no-poster">${a.name}</div>`}
+                            <div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); text-align:center; font-size:7px; padding:3px; font-weight:700;">${a.name}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        let searchTimeout;
+        async function executeSearch(query) {
+            clearTimeout(searchTimeout);
+            
+            // Si on efface le texte, on remet les acteurs populaires sans recharger tout l'écran
+            if(query.length < 3) {
+                loadPopularActors();
+                return; 
+            }
+
+            // Léger délai pour ne pas spammer l'API à chaque lettre tapée
+            searchTimeout = setTimeout(async () => {
+                const area = document.getElementById('search-results-area');
+                area.innerHTML = `<div style="text-align:center; padding:20px; color:var(--imdb-yellow); font-family:'Orbitron';">Recherche en cours...</div>`;
+
+                try {
+                    const encodedQuery = encodeURIComponent(query);
+                    const [mRes, sRes, aRes] = await Promise.all([
+                        fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodedQuery}&language=fr-FR`),
+                        fetch(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${encodedQuery}&language=fr-FR`),
+                        fetch(`https://api.themoviedb.org/3/search/person?api_key=${API_KEY}&query=${encodedQuery}&language=fr-FR`)
+                    ]);
+                    const mData = await mRes.json(); const sData = await sRes.json(); const aData = await aRes.json();
+
+                    area.innerHTML = `
+                        ${mData.results.length > 0 ? `<div class="section-title">Films</div><div class="h-scroll">${generateCards(mData.results, 'movie')}</div>` : ''}
+                        ${sData.results.length > 0 ? `<div class="section-title">Séries</div><div class="h-scroll">${generateCards(sData.results, 'tv')}</div>` : ''}
+                        ${aData.results.length > 0 ? `<div class="section-title">Acteurs</div><div class="h-scroll">${generateCards(aData.results, 'person')}</div>` : ''}
+                    `;
+                } catch(e) {
+                    area.innerHTML = `<div style="text-align:center; padding:20px;">Erreur réseau.</div>`;
+                }
+            }, 400); 
+        }
+
+        function generateCards(results, type) {
+            return results.slice(0, 10).map(item => `
+                <div class="poster-card" onclick="${type === 'person' ? `renderActorProfile(${item.id})` : ''}">
+                    ${item.poster_path || item.profile_path 
+                        ? `<img src="${IMG_PATH + (item.poster_path || item.profile_path)}">` 
+                        : `<div class="no-poster">${item.title || item.name}</div>`}
+                </div>
+            `).join('');
+        }
+
+        // --- FICHE ACTEUR DÉTAILLÉE ---
+        async function renderActorProfile(id) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
+            modal.style.display = 'block';
+            body.innerHTML = `<div style="color:white; text-align:center;">Chargement...</div>`;
+
+            const [pRes, cRes] = await Promise.all([
+                fetch(`https://api.themoviedb.org/3/person/${id}?api_key=${API_KEY}&language=fr-FR`),
+                fetch(`https://api.themoviedb.org/3/person/${id}/combined_credits?api_key=${API_KEY}&language=fr-FR`)
+            ]);
+            const p = await pRes.json();
+            const credits = await cRes.json();
+
+            let ageStr = "Âge inconnu";
+            if (p.birthday) {
+                const birthYear = new Date(p.birthday).getFullYear();
+                const currentYear = new Date().getFullYear();
+                ageStr = `${currentYear - birthYear} ans`;
+            }
+
+            const sortedCast = credits.cast.sort((a, b) => {
+                const dateA = new Date(a.release_date || a.first_air_date || '1900-01-01');
+                const dateB = new Date(b.release_date || b.first_air_date || '1900-01-01');
+                return dateB - dateA;
+            });
+
+            const movies = sortedCast.filter(c => c.media_type === 'movie');
+            const series = sortedCast.filter(c => c.media_type === 'tv');
+
+            // Affichage avec la grille de 5 colonnes pour la filmo
+            body.innerHTML = `
+                <div style="display:flex; gap:15px; margin-bottom:20px;">
+                    <div class="poster-card" style="flex:0 0 100px;">
+                        ${p.profile_path ? `<img src="${IMG_PATH + p.profile_path}">` : `<div class="no-poster">${p.name}</div>`}
+                    </div>
+                    <div>
+                        <h1 style="margin:0; font-size:20px;">${p.name}</h1>
+                        <p style="color:var(--imdb-yellow); font-weight:800; font-size:14px; margin:5px 0;">${ageStr}</p>
+                        <p style="color:var(--t-s); font-size:12px; margin:0;">📍 ${p.place_of_birth || "Lieu inconnu"}</p>
+                    </div>
+                </div>
+                
+                <div class="section-title" style="padding-left:0;">Films</div>
+                <div class="grid-5col" style="padding:0;">
+                    ${movies.map(m => `
+                        <div class="poster-card" style="width:100%;">
+                            ${m.poster_path ? `<img src="${IMG_PATH + m.poster_path}">` : `<div class="no-poster">${m.title}</div>`}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="section-title" style="padding-left:0; margin-top:20px;">Séries</div>
+                <div class="grid-5col" style="padding:0;">
+                    ${series.map(s => `
+                        <div class="poster-card" style="width:100%;">
+                            ${s.poster_path ? `<img src="${IMG_PATH + s.poster_path}">` : `<div class="no-poster">${s.name}</div>`}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // --- ONGLET 3 : MES TOPS ---
+        function renderMesTop() {
+            setActive(2);
+            document.getElementById('view').innerHTML = `
+                <div class="header-ios"><h1>Mes Tops 10</h1></div>
+                ${buildTopSection('Films', 'movies')}
+                ${buildTopSection('Séries', 'series')}
+                ${buildTopSection('Acteurs', 'actors')}
+            `;
+        }
+
+        function buildTopSection(title, type) {
+            const list = db.tops[type];
+            let html = `<div class="section-title">Top 10 ${title}</div><div class="h-scroll">`;
+            
+            list.forEach((item, index) => {
+                html += `
+                    <div class="poster-card">
+                        <div class="rank-badge">#${index + 1}</div>
+                        <button class="remove-btn" onclick="removeFromTop('${type}', ${index})">X</button>
+                        ${item.img ? `<img src="${item.img}">` : `<div class="no-poster">${item.name}</div>`}
+                    </div>`;
+            });
+
+            if (list.length < 10) {
+                html += `
+                    <div class="poster-card" style="display:flex; align-items:center; justify-content:center; border: 2px dashed #444; background:transparent;" onclick="openAddTopModal('${type}')">
+                        <span style="font-size:40px; color:#444;">+</span>
+                    </div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function removeFromTop(type, index) {
+            db.tops[type].splice(index, 1);
+            saveDB();
+            renderMesTop();
+        }
+
+        async function openAddTopModal(type) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
+            modal.style.display = 'block';
+            
+            let queryType = type === 'movies' ? 'movie' : (type === 'series' ? 'tv' : 'person');
+            let label = type === 'movies' ? 'un film' : (type === 'series' ? 'une série' : 'un acteur');
+
+            body.innerHTML = `
+                <h2 style="margin-top:0;">Ajouter à mon Top</h2>
+                <input type="text" class="rate-input" placeholder="Rechercher ${label}..." oninput="searchForTop(this.value, '${queryType}', '${type}')">
+                <div id="top-search-results" class="grid-3col" style="padding:20px 0;"></div>
+            `;
+        }
+
+        async function searchForTop(query, apiType, dbType) {
+            if(query.length < 3) return;
+            const encoded = encodeURIComponent(query);
+            const res = await fetch(`https://api.themoviedb.org/3/search/${apiType}?api_key=${API_KEY}&query=${encoded}&language=fr-FR`);
+            const data = await res.json();
+            
+            document.getElementById('top-search-results').innerHTML = data.results.slice(0,6).map(item => `
+                <div class="poster-card" style="width:100%;" onclick="addToTop('${dbType}', '${item.title || item.name}', '${item.poster_path || item.profile_path}')">
+                    ${item.poster_path || item.profile_path ? `<img src="${IMG_PATH + (item.poster_path || item.profile_path)}">` : `<div class="no-poster">${item.title || item.name}</div>`}
+                </div>
+            `).join('');
+        }
+
+        function addToTop(type, name, imgPath) {
+            db.tops[type].push({ name, img: imgPath !== 'null' ? IMG_PATH + imgPath : null });
+            saveDB();
+            closeModal();
+            renderMesTop();
+        }
+
+
+        // --- ONGLET 4 : MES CRITIQUES ---
+        function getNoteColor(note) {
+            if(note >= 7) return 'var(--rate-green)';
+            if(note == 6) return 'var(--rate-yellow)';
+            if(note == 5) return 'var(--rate-orange)';
+            return 'var(--rate-red)';
+        }
+
+        function renderCritiques() {
+            setActive(3);
+            
+            const nbFilms = db.reviews.filter(r => r.type === 'movie').length;
+            const nbSeries = db.reviews.filter(r => r.type === 'tv').length;
+
+            document.getElementById('view').innerHTML = `
+                <div class="brand-title">CINÉ SCORE <br><span>by @wb10officiel</span></div>
+                <div class="header-ios"><h1>Mes Critiques</h1></div>
+                
+                <button class="btn-big-add" onclick="openAddReviewModal()">+</button>
+
+                <div class="stats-ribbon">
+                    <div class="stat-box"><span class="stat-val">${nbFilms}</span><span class="stat-lbl">Films notés</span></div>
+                    <div class="stat-box"><span class="stat-val">${nbSeries}</span><span class="stat-lbl">Séries notées</span></div>
+                </div>
+
+                <div style="padding-top:10px;">
+                    ${db.reviews.slice().reverse().map((r, index) => `
+                        <div class="review-card">
+                            ${r.img ? `<img src="${r.img}" class="review-poster">` : `<div class="review-poster no-poster" style="font-size:8px;">${r.name}</div>`}
+                            <div style="flex:1;">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                    <h3 style="margin:0; font-size:14px; text-transform:uppercase;">${r.name}</h3>
+                                    <div class="review-note" style="background:${getNoteColor(r.note)}">${r.note}/10</div>
+                                </div>
+                                <p class="review-text">"${r.text}"</p>
+                                <button onclick="deleteReview(${db.reviews.length - 1 - index})" style="background:transparent; color:#666; border:none; font-size:10px; padding:0; margin-top:5px; cursor:pointer;">Supprimer</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function deleteReview(index) {
+            db.reviews.splice(index, 1);
+            saveDB();
+            renderCritiques();
+        }
+
+        async function openAddReviewModal() {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
+            modal.style.display = 'block';
+            
+            body.innerHTML = `
+                <h2 style="margin-top:0;">Nouvelle Critique</h2>
+                <input type="text" class="rate-input" placeholder="Rechercher le film ou la série..." oninput="searchForReview(this.value)">
+                <div id="review-search-results" class="grid-3col" style="padding:20px 0;"></div>
+            `;
+        }
+
+        async function searchForReview(query) {
+            if(query.length < 3) return;
+            const encoded = encodeURIComponent(query);
+            const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encoded}&language=fr-FR`);
+            const data = await res.json();
+            
+            const filtered = data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
+
+            document.getElementById('review-search-results').innerHTML = filtered.slice(0,6).map(item => `
+                <div class="poster-card" style="width:100%;" onclick="showReviewForm('${item.media_type}', '${item.title || item.name}', '${item.poster_path}')">
+                    ${item.poster_path ? `<img src="${IMG_PATH + item.poster_path}">` : `<div class="no-poster">${item.title || item.name}</div>`}
+                </div>
+            `).join('');
+        }
+
+        function showReviewForm(type, name, imgPath) {
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+                <h2 style="margin-top:0; color:var(--imdb-yellow); text-transform:uppercase;">${name}</h2>
+                <label style="font-size:12px; font-weight:700; color:var(--t-s); text-transform:uppercase;">Note sur 10</label>
+                <input type="number" id="rev-note" class="rate-input" min="1" max="10" placeholder="Ex: 8">
+                
+                <label style="font-size:12px; font-weight:700; color:var(--t-s); text-transform:uppercase; margin-top:15px; display:block;">Critique</label>
+                <textarea id="rev-text" placeholder="Qu'avez-vous pensé de cette œuvre ?"></textarea>
+                
+                <button class="save-btn" onclick="saveReview('${type}', '${name}', '${imgPath}')">Valider ma critique</button>
+            `;
+        }
+
+        function saveReview(type, name, imgPath) {
+            const note = parseInt(document.getElementById('rev-note').value);
+            const text = document.getElementById('rev-text').value;
+            
+            if(!note || note < 1 || note > 10) return alert("Veuillez mettre une note entre 1 et 10.");
+
+            db.reviews.push({
+                type, name, img: imgPath !== 'null' ? IMG_PATH + imgPath : null, note, text
+            });
+            
+            saveDB();
+            closeModal();
+            renderCritiques();
+        }
+
+        // --- INIT ---
+        renderSorties();
+
+    </script>
+</body>
+</html>
