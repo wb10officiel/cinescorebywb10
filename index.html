@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CinéScore Pro</title>
+    <title>CinéScore</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>@font-face { font-family: 'Graphik'; src: url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'); }</style>
     <style>
         :root {
             --imdb-yellow: #f5c518;
@@ -12,29 +13,24 @@
             --bg-card: #121212;
             --t-p: #ffffff;
             --t-s: #a2a2a2;
+            --rate-green: #4caf50;
+            --rate-yellow: #fdd835;
+            --rate-orange: #ff9800;
+            --rate-red: #f44336;
         }
         
         body { 
             background: var(--bg-p);
             color: var(--t-p); 
-            font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 120px; 
+            font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 100px; 
             overflow-x: hidden;
         }
-
-        /* --- MODAL 100% OPAQUE --- */
-        .modal { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: #000000; /* Noir opaque */
-            z-index: 10000; 
-            overflow-y: auto; 
-        }
-        .modal-content { padding: 0; padding-bottom: 100px; }
         
-        /* On cache le bouton retour comme demandé */
-        .close-btn { display: none; }
+        .user-profile-avatar { width: 45px; height: 45px; border-radius: 50%; background: #1a1a1a; border: 2px solid var(--imdb-yellow); object-fit: cover; cursor: pointer; }
+        .user-profile-crown { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; align-items: center; gap: 10px; }
+        
+        .settings-btn { position: fixed; top: 20px; left: 20px; z-index: 999; background: rgba(50, 50, 50, 0.8); border: 2px solid #333; color: var(--imdb-yellow); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); }
+        .settings-btn:hover { background: rgba(80, 80, 80, 0.9); transform: rotate(90deg); }
 
         .brand-title {
             text-align: center;
@@ -47,83 +43,308 @@
             text-transform: uppercase;
         }
         .brand-title span {
-            font-size: 10px; color: #888; letter-spacing: 1px;
-            font-family: 'Inter', sans-serif; font-weight: 400;
-            display: block; margin-top: -5px;
+            font-size: 10px;
+            color: #888;
+            letter-spacing: 1px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            display: block;
+            margin-top: -5px;
         }
 
         .must-tab-bar {
-            position: fixed; bottom: 30px; left: 20px; right: 20px;
-            height: 65px; background: rgba(15, 15, 15, 0.95); 
-            backdrop-filter: blur(10px); display: flex; 
-            justify-content: space-around; align-items: center;
-            border: 1px solid #333; border-radius: 25px; z-index: 9999;
+            position: fixed; 
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%; 
+            height: auto;
+            background: linear-gradient(to top, rgba(15, 15, 15, 0.98), rgba(15, 15, 15, 0.95));
+            backdrop-filter: blur(10px);
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            border-top: 1px solid #333; 
+            border-radius: 0;
+            z-index: 9999;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            padding: 12px 0 max(12px, env(safe-area-inset-bottom));
         }
-        .tab-item { display: flex; flex-direction: column; align-items: center; opacity: 0.5; flex: 1; cursor: pointer; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.5; flex: 1; cursor: pointer; padding: 8px 5px; }
         .tab-item.active { opacity: 1; color: var(--imdb-yellow); }
-        .tab-emoji { font-size: 18px; }
-        .tab-label { font-size: 8px; font-weight: 700; text-transform: uppercase; margin-top: 2px; text-align: center; }
+        .tab-emoji { font-size: 24px; line-height: 1; }
+        .tab-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-top: 6px; text-align: center; line-height: 1.2; letter-spacing: 0.5px; }
 
         .header-ios { padding: 20px 15px 10px; }
-        .header-ios h1 { font-size: 24px; font-weight: 900; margin: 0; text-transform: uppercase; }
+        .header-ios h1 { font-size: 24px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: -0.5px; }
         .section-title { font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--imdb-yellow); padding: 15px; text-transform: uppercase; }
 
-        .grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 15px 15px; }
+        .h-scroll { display: flex; overflow-x: auto; gap: 12px; padding: 0 15px 15px; scroll-snap-type: x mandatory; }
+        .h-scroll::-webkit-scrollbar { display: none; }
         
-        .poster-card { 
-            aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; 
-            background: var(--imdb-yellow); position: relative; border: 1px solid #333; cursor: pointer; 
-        }
+        .poster-card { flex: 0 0 120px; aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; background: #1a1a1a; position: relative; border: 1px solid #333; scroll-snap-align: start; cursor: pointer; }
         .poster-card img { width: 100%; height: 100%; object-fit: cover; }
         
         .no-poster { 
-            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; 
-            text-align: center; font-weight: 900; font-size: 11px; padding: 10px;
-            box-sizing: border-box; text-transform: uppercase; color: #000;
+            background: var(--imdb-yellow);
+            color: #000; width: 100%; height: 100%; 
+            display: flex; align-items: center; justify-content: center; 
+            text-align: center; font-weight: 900; font-size: 14px; padding: 8px;
+            box-sizing: border-box; text-transform: uppercase; word-wrap: break-word; line-height: 1.3;
         }
 
-        .search-bar { margin: 0 15px 15px; background: #1a1a1a; padding: 12px; border-radius: 10px; display: flex; align-items: center; border: 1px solid #333; }
-        .search-bar input { background: transparent; border: none; color: white; margin-left: 10px; width: 100%; outline: none; font-size: 16px; }
+        .grid-3col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 15px 15px; }
+        .grid-5col { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 0 15px 15px; }
 
+        .search-bar { margin: 0 15px 15px; background: #1a1a1a; padding: 12px; border-radius: 10px; display: flex; align-items: center; border: 1px solid #333; }
+        .search-bar input { background: transparent; border: none; color: white; margin-left: 10px; width: 100%; outline: none; font-size: 16px; font-weight: 600;}
+
+        .btn-big-add { 
+            background: var(--imdb-yellow);
+            color: black; font-size: 30px; font-weight: 900; 
+            width: 60px; height: 60px; border-radius: 30px; display: flex; align-items: center; justify-content: center;
+            margin: 20px auto; cursor: pointer; box-shadow: 0 4px 15px rgba(245, 197, 24, 0.4); border: none;
+        }
+        
         .review-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; margin: 0 15px 15px; display: flex; gap: 15px; }
         .review-poster { width: 60px; aspect-ratio: 2/3; border-radius: 6px; object-fit: cover; }
-        .review-note { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; padding: 4px 8px; border-radius: 6px; color: black; }
+        .review-note { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; padding: 4px 8px; border-radius: 6px; display: inline-block; color: black; }
+        .review-text { font-size: 12px; color: #ccc; margin-top: 8px; line-height: 1.4; }
 
-        /* --- STYLE PROFIL ACTEUR --- */
-        .actor-header { padding: 30px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .actor-header img { width: 180px; height: 180px; border-radius: 20px; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-bottom: 20px; }
-        .actor-name-big { font-family: 'Orbitron'; font-size: 28px; color: var(--imdb-yellow); margin: 0 0 10px 0; font-weight: 900; }
-        .actor-info-line { font-size: 14px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .stats-ribbon { display: flex; justify-content: space-around; background: var(--bg-card); padding: 15px; margin: 15px; border-radius: 12px; border: 1px solid #222; }
+        .stat-box { text-align: center; }
+        .stat-val { display: block; font-size: 24px; font-family: 'Orbitron'; font-weight: 900; color: var(--imdb-yellow); }
+        .stat-lbl { font-size: 9px; color: var(--t-s); text-transform: uppercase; font-weight: 700; margin-top: 4px;}
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; z-index: 10000; overflow-y: auto; padding-bottom: 50px; touch-action: none;}
+        .modal-content { padding: 20px; padding-bottom: 100px; }
+        .close-btn { display: none; }
+        .actor-profile-header { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 30px; padding: 20px; }
+        .actor-profile-photo { width: 180px; height: 270px; border-radius: 8px; object-fit: cover; }
+        .actor-profile-name { font-family: 'Orbitron'; color: var(--imdb-yellow); font-size: 26px; font-weight: 900; text-align: center; margin: 0; }
+        .actor-profile-info { font-size: 14px; color: #ccc; text-align: center; margin-top: 10px; line-height: 1.6; }
+        .filmography-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 15px 15px; }
+        
+        textarea { width: 100%; background: #111; color: white; border: 1px solid #333; border-radius: 8px; padding: 15px; box-sizing: border-box; min-height: 120px; font-family: 'Inter'; margin-top: 10px; }
+        .rate-input { width: 100%; padding: 15px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; font-size: 18px; font-weight: 900; }
+        .save-btn { width: 100%; background: var(--imdb-yellow); color: black; border: none; padding: 15px; border-radius: 8px; font-weight: 900; margin-top: 15px; text-transform: uppercase; cursor: pointer; }
+
+        .remove-btn { display: none; position: absolute; top: 5px; right: 5px; background: rgba(200,0,0,0.9); color: white; border-radius: 50%; width: 20px; height: 20px; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; z-index: 10; }
+        .rank-badge { position: absolute; top: 5px; left: 5px; padding: 4px 8px; border-radius: 50%; font-weight: 900; font-size: 14px; z-index: 5; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; }
+        .rank-badge-gold { background: linear-gradient(135deg, #FFD700 0%, #FFC700 50%, #FF9500 100%); color: #333; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+        .rank-badge-silver { background: linear-gradient(135deg, #E8E8E8 0%, #D3D3D3 50%, #A9A9A9 100%); color: #333; text-shadow: 0 1px 3px rgba(0,0,0,0.2); box-shadow: 0 4px 12px rgba(192, 192, 192, 0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+        .rank-badge-bronze { background: linear-gradient(135deg, #CD7F32 0%, #B87333 50%, #975A16 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 12px rgba(205, 127, 50, 0.5), inset 0 1px 0 rgba(255,255,255,0.2); }
+        .rank-badge-white { background: #f0f0f0; color: #333; text-shadow: 0 1px 2px rgba(0,0,0,0.1); box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.5); }
+
+        .edit-link { 
+            display: none; 
+            position: fixed; 
+            bottom: max(20px, env(safe-area-inset-bottom)); 
+            right: 20px; 
+            width: 50px; 
+            height: 50px; 
+            background: rgba(245, 197, 24, 0.9); 
+            color: black; 
+            padding: 0; 
+            border-radius: 50%; 
+            font-weight: 900; 
+            font-size: 10px; 
+            text-transform: uppercase; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            z-index: 1000; 
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .edit-link:hover { background: rgba(245, 197, 24, 1); transform: scale(1.1); }
+        .edit-link:active { transform: scale(0.95); }
+        
+        .genre-btn-container { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; padding: 10px 15px; }
+        .genre-btn { background: #1a1a1a; color: white; border: 1px solid #333; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .genre-btn:hover { border-color: var(--imdb-yellow); background: #252525; }
+
+        /* --- FILTRE BOUTONS PROFIL --- */
+        .filter-btn-group { display: flex; justify-content: center; gap: 12px; padding: 20px 15px; flex-wrap: wrap; }
+        .filter-btn { background: transparent; color: var(--imdb-yellow); font-size: 16px; font-weight: 800; padding: 12px 24px; border: 2px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .filter-btn.active { background: var(--imdb-yellow); color: black; border-color: var(--imdb-yellow); }
+        .filter-btn:not(.active) { border-color: var(--imdb-yellow); }
+        .filter-btn:hover:not(.active) { background: rgba(245, 197, 24, 0.1); }
 
         /* --- NOUVELLE FICHE FILM XXL --- */
-        .hero-poster-xxl { width: 100%; height: 75vh; display: block; border-radius: 20px; object-fit: cover; }
-        .movie-info-bar { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .movie-info-main h2 { font-size: 24px; margin: 0; font-weight: 900; color: white; }
-        .movie-metadata { font-size: 13px; color: var(--t-s); margin-top: 6px; }
-        .score-badge-xxl { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 12px; font-family: 'Orbitron'; font-weight: 900; color: var(--imdb-yellow); border: 1px solid rgba(245, 197, 24, 0.3); }
-        .cast-rect-scroll { display: flex; overflow-x: auto; gap: 10px; padding: 10px 20px; }
+        .movie-details-container { margin: 0 -20px; }
+        .hero-poster-small { width: 100%; height: 40vh; display: block; border-radius: 12px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .movie-info-bar { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+        .movie-info-main h2 { font-size: 28px; margin: 0; font-weight: 900; color: white; }
+        .movie-metadata { font-size: 14px; color: var(--t-s); margin-top: 8px; line-height: 1.6; }
+        .score-badge-xxl { padding: 18px 24px; border-radius: 12px; font-family: 'Orbitron'; font-weight: 900; border: 3px solid; white-space: nowrap; font-size: 40px; }
+        .score-green { color: white; background: #4caf50; border-color: #66bb6a; }
+        .score-blue { color: white; background: #2196F3; border-color: #42a5f5; }
+        .score-orange { color: white; background: #ff9800; border-color: #ffb74d; }
+        .score-red { color: white; background: #f44336; border-color: #ef5350; }
+        .score-light-yellow { color: #000; background: #fdd835; border-color: #fdd835; }
+        .rating-container { background: #1a1a1a; padding: 20px; border-radius: 12px; margin: 20px; }
+        .star-rating { font-size: 40px; letter-spacing: 10px; cursor: pointer; display: flex; justify-content: center; gap: 5px; }
+        .star { cursor: pointer; color: #444; transition: 0.2s; }
+        .star.active { color: var(--imdb-yellow); }
+        .star.rating-1to4 { color: #f44336; }
+        .star.rating-5to5point9 { color: #ff9800; }
+        .star.rating-6to6point9 { color: #2196F3; }
+        .star.rating-7to10 { color: #4caf50; }
+        .rating-text { text-align: center; font-size: 16px; font-weight: 600; color: #ccc; margin-top: 15px; }
+        .save-rating-btn { background: #4caf50; color: black; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; flex: 1; text-transform: uppercase; font-size: 13px; transition: 0.3s; }\n        .save-rating-btn.color-green { background: #4caf50; }\n        .save-rating-btn.color-blue { background: #2196F3; }\n        .save-rating-btn.color-orange { background: #ff9800; }\n        .save-rating-btn.color-red { background: #f44336; }
+        .cast-rect-scroll { display: flex; overflow-x: auto; gap: 12px; padding: 12px 20px; }
         .cast-rect-scroll::-webkit-scrollbar { display: none; }
-        .actor-rect-card { flex: 0 0 110px; height: 160px; border-radius: 12px; overflow: hidden; position: relative; }
-        .actor-rect-card img { width: 100%; height: 100%; object-fit: cover; }
-        .actor-rect-name { position: absolute; bottom: 0; width: 100%; background: linear-gradient(transparent, black); color: white; font-size: 10px; padding: 15px 5px 5px; text-align: center; }
-        .my-review-white-card { background: white; margin: 20px; border-radius: 20px; padding: 20px; color: black; }
-        .trailer-video { width: 100%; aspect-ratio: 16/9; border-radius: 15px; border: none; }
+        .actor-rect-card { flex: 0 0 130px; height: auto; border-radius: 12px; overflow: visible; position: relative; border: none; }
+        .actor-rect-card img { width: 130px; height: 195px; object-fit: cover; border-radius: 8px; display: block; }
+        .actor-rect-name { position: static; width: auto; background: none; color: white; font-size: 11px; padding: 8px 0; text-align: center; box-sizing: border-box; font-weight: 600; margin-top: 8px; }
+        .synopsis-section { padding: 20px; font-size: 15px; line-height: 1.6; color: #eee; }
+        .review-editorial-card { background: white; margin: 25px; border-radius: 12px; padding: 30px; color: black; box-shadow: 0 4px 20px rgba(245,197,24,0.1); }
+        .review-editorial-title { font-size: 13px; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; font-weight: 700; }
+        .review-editorial-text { font-size: 17px; line-height: 1.9; font-weight: 600; margin: 0; color: #000; }
+        .review-editorial-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
+        .review-badge-editorial { background: #f5c518; color: black; padding: 8px 16px; border-radius: 20px; font-weight: 900; font-size: 18px; font-family: 'Orbitron'; }
+        .trailer-section { padding: 20px; }
+        .trailer-container { position: relative; width: 100%; background: #000; border-radius: 12px; overflow: hidden; }
+        .trailer-video { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+        .trailer-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.2); border: 2px solid white; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; z-index: 10; }
+        .trailer-play-btn:hover { background: rgba(255, 255, 255, 0.4); }
+        .trailer-play-icon { width: 0; height: 0; border-left: 30px solid white; border-top: 20px solid transparent; border-bottom: 20px solid transparent; margin-left: 8px; }
+        
+        /* --- Bouton Play Moderne --- */
+        .modern-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .modern-play-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2); transition: all 0.3s ease; z-index: -1; }
+        .modern-play-btn:hover::before { background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.15) 100%); border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); transform: scale(1.1); }
+        .modern-play-icon { width: 0; height: 0; border-left: 28px solid white; border-top: 20px solid transparent; border-bottom: 20px solid transparent; margin-left: 6px; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)); transition: all 0.3s ease; }
+        .modern-play-btn:hover .modern-play-icon { transform: scale(1.1); filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5)); }
+        
+        /* --- Bouton À Voir --- */
+        .favorite-btn { background: #333; border: none; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: 0.3s; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-top: 10px; flex: 1; justify-content: center; }
+        .favorite-btn:hover { background: #444; }
+        .favorite-btn.active { background: #ff9800; color: white; }
+        .favorite-btn.active:hover { background: #f57c00; }
+        
+        /* --- Rating Buttons Container --- */
+        .rating-buttons { display: flex; gap: 12px; margin-top: 15px; flex-direction: row-reverse; }
+
+        /* --- Gestion des erreurs --- */
+        .error-toast { 
+            position: fixed; 
+            bottom: 100px; 
+            left: 20px; 
+            right: 20px; 
+            background: #f44336; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            z-index: 11000; 
+            animation: slideUp 0.3s ease-out; 
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.5);
+        }
+        
+        .success-toast { 
+            position: fixed; 
+            bottom: 100px; 
+            left: 20px; 
+            right: 20px; 
+            background: #4caf50; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            z-index: 11000; 
+            animation: slideUp 0.3s ease-out; 
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5);
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* --- Lecteur Vidéo Fullscreen iPhone --- */
+        #video-fullscreen { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: #000; 
+            z-index: 10001; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            padding: max(20px, env(safe-area-inset-top)) 0 max(20px, env(safe-area-inset-bottom)) 0;
+        }
+        #video-fullscreen.active { display: flex; }
+        #video-fullscreen iframe { width: 100%; height: 100%; border: none; border-radius: 0; }
+        .video-close-btn { 
+            position: fixed; 
+            top: max(10px, env(safe-area-inset-top)); 
+            left: 20px; 
+            background: rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(10px);
+            color: white; 
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 10002;
+            transition: all 0.3s ease;
+        }
+        .video-close-btn:active { 
+            background: rgba(255, 255, 255, 0.3); 
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
 
+    <div class="settings-btn" onclick="openSettings()" title="Paramètres">⚙️</div>
+    <div class="user-profile-crown">
+        <div style="text-align: right;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--imdb-yellow);">@Florian_Gervais</div>
+            <div style="font-size: 10px; color: #666; margin-top: -2px;">Cinéphile</div>
+        </div>
+        <img class="user-profile-avatar" id="userAvatar" src="https://via.placeholder.com/45x45?text=FG" alt="Avatar">
+    </div>
     <div id="view"></div>
+    <div class="edit-link" onclick="toggleEdit()">Modifier</div>
 
     <div id="fullModal" class="modal">
         <div class="modal-content">
+            <div class="close-btn" onclick="closeModal()">❮ Retour</div>
             <div id="modal-body"></div>
         </div>
     </div>
 
+    <div id="video-fullscreen">
+        <button class="video-close-btn" onclick="closeVideoFullscreen()">✕ Fermer</button>
+        <div id="video-container" style="width: 100%; height: 100%;"></div>
+    </div>
+
     <nav class="must-tab-bar">
         <div class="tab-item active" onclick="renderSorties()">
-            <span class="tab-emoji">🍿</span>
-            <span class="tab-label">Nouv.<br>Sorties</span>
+            <span class="tab-emoji">�</span>
+            <span class="tab-label">Accueil</span>
         </div>
         <div class="tab-item" onclick="renderSearch()">
             <span class="tab-emoji">🔍</span>
@@ -133,9 +354,13 @@
             <span class="tab-emoji">🏆</span>
             <span class="tab-label">Mes Tops</span>
         </div>
-        <div class="tab-item" onclick="renderCritiques()">
+        <div class="tab-item" onclick="renderActivite()">
             <span class="tab-emoji">✍️</span>
-            <span class="tab-label">Mes Critiques</span>
+            <span class="tab-label">Activite</span>
+        </div>
+        <div class="tab-item" onclick="renderProfil()">
+            <span class="tab-emoji">👤</span>
+            <span class="tab-label">Profil</span>
         </div>
     </nav>
 
@@ -143,163 +368,1660 @@
         const API_KEY = "f59231e7c7085af32a303eb181358453";
         const IMG_PATH = "https://image.tmdb.org/t/p/w500";
         const FIREBASE_URL = "https://cinescore-56854-default-rtdb.europe-west1.firebasedatabase.app/data.json";
+        const FETCH_TIMEOUT = 10000; // 10 secondes
 
-        let db = { tops: { movies: [], series: [], actors: [] }, reviews: [] };
+        let db = {
+            tops: { movies: [], series: [], actors: [], artists: [] },
+            reviews: [],
+            favorites: [],
+            user: {
+                username: '@Florian_Gervais',
+                displayName: 'Florian Gervais',
+                avatar: null,
+                bio: '',
+                age: null,
+                gender: null,
+                country: null,
+                website: null,
+                instagram: null,
+                snapchat: null,
+                password: null
+            }
+        };
 
-        // --- GESTION DU SWIPE POUR FERMER ---
-        let touchstartX = 0;
-        let touchendX = 0;
+        // --- GESTION CENTRALISÉE DES ERREURS ---
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.textContent = '⚠️ ' + message;
+            document.body.appendChild(toast);
+            console.error('Error:', message);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
 
-        const modal = document.getElementById('fullModal');
-        modal.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, false);
-        modal.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if (touchstartX < 60 && touchendX - touchstartX > 100) closeModal();
-        }, false);
+        function showSuccess(message) {
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.textContent = '✓ ' + message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
-        function closeModal() { modal.style.display = 'none'; document.getElementById('modal-body').innerHTML = ''; }
+        // Fetch avec timeout et gestion d'erreur
+        async function fetchWithTimeout(url, options = {}) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Validation basique de la réponse
+                if (data.results === null || data.results === undefined) {
+                    console.warn('Réponse API invalide:', url);
+                }
+                
+                return data;
+            } catch (error) {
+                clearTimeout(timeout);
+                
+                if (error.name === 'AbortError') {
+                    throw new Error('La requête a dépassé le délai imparti (10s)');
+                }
+                
+                throw error;
+            }
+        }
+
+        // Validation des données chargées
+        function validateData(data, expectedFields = []) {
+            if (!data || typeof data !== 'object') {
+                throw new Error('Données invalides reçues du serveur');
+            }
+            
+            for (const field of expectedFields) {
+                if (!(field in data)) {
+                    console.warn(`Champ manquant: ${field}`);
+                }
+            }
+            
+            return data;
+        }
 
         async function loadData() {
             try {
-                const res = await fetch(FIREBASE_URL);
-                const cloudData = await res.json();
-                if (cloudData) db = cloudData;
-            } catch (e) { console.error(e); }
+                const cloudData = await fetchWithTimeout(FIREBASE_URL);
+                validateData(cloudData);
+                
+                if (cloudData) {
+                    db = cloudData;
+                    if (!db.reviews) db.reviews = [];
+                    if (!db.tops) db.tops = { movies: [], series: [], actors: [] };
+                    
+                    const activeTab = document.querySelector('.tab-item.active .tab-label');
+                    if (activeTab) {
+                        const label = activeTab.innerText;
+                        if(label.includes("TOPS")) renderMesTop();
+                        if(label.includes("CRITIQUES")) renderCritiques();
+                    }
+                }
+            } catch (e) {
+                console.error("Erreur Firebase:", e);
+                showError("Impossible de charger vos données");
+                // Initialiser avec données locales vides si Firebase échoue
+                db = { tops: { movies: [], series: [], actors: [] }, reviews: [] };
+            }
+
+            if (!window.syncInterval) {
+                window.syncInterval = setInterval(async () => {
+                    try {
+                        const cloudData = await fetchWithTimeout(FIREBASE_URL);
+                        validateData(cloudData);
+                        
+                        if (cloudData && JSON.stringify(db) !== JSON.stringify(cloudData)) {
+                            db = cloudData;
+                            if(!db.reviews) db.reviews = [];
+                            const activeTab = document.querySelector('.tab-item.active .tab-label');
+                            if (activeTab) {
+                                const label = activeTab.innerText;
+                                if(label.includes("TOPS")) renderMesTop();
+                                if(label.includes("CRITIQUES")) renderCritiques();
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Erreur sync Firebase:", e);
+                    }
+                }, 30000);
+            }
         }
 
         async function syncFirebase() {
-            try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(db) }); } catch (e) { }
+            try {
+                if (!db || typeof db !== 'object') {
+                    throw new Error('Données invalides à synchroniser');
+                }
+                
+                const response = await fetchWithTimeout(FIREBASE_URL, {
+                    method: 'PUT',
+                    body: JSON.stringify(db)
+                });
+                
+                showSuccess('Données sauvegardées');
+                return response;
+            } catch (e) {
+                console.error('Erreur sync:', e);
+                showError('Erreur lors de la sauvegarde');
+                throw e;
+            }
         }
 
         function setActive(index) {
-            document.querySelectorAll('.tab-item').forEach((t, i) => t.classList.toggle('active', i === index));
+            document.querySelectorAll('.tab-item').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            // Show/hide settings button and profile crown only on PROFIL tab (index 4)
+            document.querySelector('.settings-btn').style.display = index === 4 ? 'flex' : 'none';
+            document.querySelector('.user-profile-crown').style.display = index === 4 ? 'flex' : 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('fullModal').style.display = 'none';
+            document.getElementById('modal-body').innerHTML = '';
+        }
+
+        async function openCollection(type, title) {
+            setActive(0);
+            document.getElementById('view').innerHTML = `
+                <div class="header-ios" style="display: flex; align-items: center; gap: 15px; padding: 15px;">
+                    <button onclick="renderSorties()" style="background: none; border: none; color: var(--imdb-yellow); font-size: 20px; cursor: pointer;">❮</button>
+                    <h1 style="margin: 0; flex: 1;">${title}</h1>
+                </div>
+                <div id="collection-content">Chargement des films...</div>
+            `;
+            
+            try {
+                // Collection personnalisée avec les films spécifiés
+                if (type === 'top_rated_movies' && title === 'Meilleurs films de l\'histoire selon TMDB') {
+                    const movieNames = [
+                        'Le Parrain', 'Les Évadés', 'Scarface', 'The Dark Knight', 'Les Affranchis',
+                        'Douze hommes en colère', 'Le Bon, la Brute et le Truand', 'Alien', 'Le Silence des agneaux', 'Shining',
+                        'Apocalypse Now', 'Psychose', 'Old Boy', 'Titanic', 'Lion',
+                        'L\'Exorciste', 'La Liste de Schindler', 'Parasite', 'Taxi Driver', 'Pulp Fiction',
+                        'Il faut sauver le soldat Ryan', 'Voyage au bout de l\'enfer', 'Indiana Jones et la Dernière Croisade', 'La Ligne verte', 'Terminator 2',
+                        'Heat', 'Seven', 'Retour vers le futur 2', 'Avatar', 'Django Unchained',
+                        'Rocky', 'King Kong', 'Gladiator', 'Edward aux mains d\'argent', 'Mulholland Drive',
+                        'Les Infiltrés', '12 Years a Slave', 'Le Loup de Wall Street', 'Avengers', 'The Thing'
+                    ];
+                    
+                    // Rechercher chaque film
+                    const moviesData = await Promise.all(movieNames.map(async (name) => {
+                        try {
+                            const res = await fetchWithTimeout(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(name)}&language=fr-FR`);
+                            return res.results && res.results[0] ? res.results[0] : null;
+                        } catch (e) {
+                            console.warn(`Erreur recherche ${name}:`, e);
+                            return null;
+                        }
+                    }));
+                    
+                    const contentHTML = `
+                        <div class="grid-3col" style="padding: 20px 15px;">
+                            ${moviesData.filter(m => m).map(movie => {
+                                const posterPath = movie.poster_path;
+                                const movieTitle = movie.title || 'Sans titre';
+                                const rating = movie.vote_average || 0;
+                                const ratingColor = rating >= 7 ? '#4caf50' : rating >= 6 ? '#2196F3' : rating >= 5 ? '#ff9800' : '#f44336';
+                                
+                                return `
+                                    <div class="poster-card" onclick="renderMovieDetails(${movie.id})">
+                                        ${posterPath ? `<img src="${IMG_PATH + posterPath}" alt="${movieTitle}">` : `<div class="no-poster" style="font-size: 11px; padding: 10px;">${movieTitle}</div>`}
+                                        ${rating ? `<div style="position: absolute; top: 8px; right: 8px; background: ${ratingColor}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 12px;">⭐ ${rating.toFixed(1)}</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                    
+                    document.getElementById('collection-content').innerHTML = contentHTML;
+                    return;
+                }
+                
+                // Collections API pour les autres
+                let apiUrl = '';
+                
+                if (type === 'top_rated_movies') {
+                    apiUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=fr-FR&page=1`;
+                } else if (type === 'top_rated_series') {
+                    apiUrl = `https://api.themoviedb.org/3/tv/top_rated?api_key=${API_KEY}&language=fr-FR&page=1`;
+                } else if (type === 'oscars_golden_globes') {
+                    apiUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=fr-FR&sort_by=vote_average.desc&vote_count.gte=1000&page=1`;
+                }
+                
+                const data = await fetchWithTimeout(apiUrl);
+                const results = data.results || [];
+                
+                const contentHTML = `
+                    <div class="grid-3col" style="padding: 20px 15px;">
+                        ${results.slice(0, 30).map(item => {
+                            const posterPath = item.poster_path;
+                            const itemId = item.id;
+                            const itemType = type.includes('series') ? 'tv' : 'movie';
+                            const itemTitle = item.title || item.name || 'Sans titre';
+                            const rating = item.vote_average || 0;
+                            const ratingColor = rating >= 7 ? '#4caf50' : rating >= 6 ? '#2196F3' : rating >= 5 ? '#ff9800' : '#f44336';
+                            
+                            return `
+                                <div class="poster-card" onclick="render${itemType === 'tv' ? 'Serie' : 'Movie'}Details(${itemId})">
+                                    ${posterPath ? `<img src="${IMG_PATH + posterPath}" alt="${itemTitle}">` : `<div class="no-poster" style="font-size: 12px;">${itemTitle}</div>`}
+                                    ${rating ? `<div style="position: absolute; top: 8px; right: 8px; background: ${ratingColor}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 12px;">⭐ ${rating.toFixed(1)}</div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                document.getElementById('collection-content').innerHTML = contentHTML;
+            } catch (e) {
+                console.error('Erreur openCollection:', e);
+                document.getElementById('collection-content').innerHTML = '<div style="padding: 20px; color: #f44336;">Erreur lors du chargement de la collection</div>';
+                showError('Erreur lors du chargement');
+            }
         }
 
         async function renderSorties() {
             setActive(0);
-            document.getElementById('view').innerHTML = `<div class="header-ios"><h1>Nouvelles Sorties</h1></div><div id="trailers-container">Chargement...</div>`;
-            const res = await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${API_KEY}&language=fr-FR`);
-            const data = await res.json();
-            let html = '';
-            for (let m of data.results.slice(0, 10)) {
-                const vRes = await fetch(`https://api.themoviedb.org/3/movie/${m.id}/videos?api_key=${API_KEY}&language=fr-FR`);
-                const vData = await vRes.json();
-                let trailer = vData.results.find(v => v.type === 'Trailer');
-                if (trailer) {
-                    html += `<div style="margin: 15px; position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden;" onclick="renderMovieDetails(${m.id})">
-                        <img src="${IMG_PATH + m.backdrop_path}" style="width:100%; height:100%; object-fit:cover;">
-                        <div style="position:absolute; bottom:0; left:0; width:100%; padding:15px; background:linear-gradient(transparent, rgba(0,0,0,0.9));">
-                            <div style="font-weight:900; font-size:18px;">${m.title}</div>
-                        </div>
-                    </div>`;
+            document.querySelector('.edit-link').style.display = 'none';
+            document.getElementById('view').innerHTML = `
+                <div class="header-ios"><h1>Nouvelles Sorties</h1></div>
+                <div class="section-title">Bandes-annonces du moment</div>
+                <div id="trailers-container">Chargement...</div>
+                <div class="section-title" style="margin-top: 30px;">Collections</div>
+                <button class="collection-btn" onclick="openCollection('top_rated_movies', 'Meilleurs films de l\'histoire selon TMDB')" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); border: 2px solid var(--imdb-yellow); border-radius: 12px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; margin: 12px 15px; box-sizing: border-box; transition: 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)'; this.style.transform='translateY(0)';">🎬 Meilleurs films de l'histoire selon TMDB</button>
+                <button class="collection-btn" onclick="openCollection('oscars_golden_globes', 'Meilleurs films primés aux Oscars et Golden Globes')" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); border: 2px solid var(--imdb-yellow); border-radius: 12px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; margin: 12px 15px; box-sizing: border-box; transition: 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)'; this.style.transform='translateY(0)';">🏆 Meilleurs films primés aux Oscars et Golden Globes</button>
+                <button class="collection-btn" onclick="openCollection('top_rated_series', 'Meilleures séries de l\'histoire selon TMDB')" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); border: 2px solid var(--imdb-yellow); border-radius: 12px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; margin: 12px 15px; box-sizing: border-box; transition: 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)'; this.style.transform='translateY(0)';">📺 Meilleures séries de l'histoire selon TMDB</button>
+            `;
+            try {
+                const data = await fetchWithTimeout(`https://api.themoviedb.org/3/trending/movie/day?api_key=${API_KEY}&language=fr-FR`);
+                
+                if (!data.results || !Array.isArray(data.results)) {
+                    throw new Error('Format de réponse invalide');
+                }
+                
+                let trailersHTML = '';
+                let loadedCount = 0;
+                
+                for (let i = 0; i < Math.min(10, data.results.length); i++) {
+                    let m = data.results[i];
+                    if(!m || !m.id) continue;
+                    
+                    try {
+                        const vData = await fetchWithTimeout(`https://api.themoviedb.org/3/movie/${m.id}/videos?api_key=${API_KEY}&language=fr-FR`);
+                        let trailer = vData.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+                        
+                        if (!trailer) {
+                            const vDataEn = await fetchWithTimeout(`https://api.themoviedb.org/3/movie/${m.id}/videos?api_key=${API_KEY}`);
+                            trailer = vDataEn.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+                        }
+                        
+                        if (trailer && m.backdrop_path) {
+                            trailersHTML += `
+                                <div style="margin: 0 15px 15px; position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden; border: 1px solid #333; background: #1a1a1a;">
+                                    <img src="${IMG_PATH + m.backdrop_path}" style="width:100%; height:100%; object-fit:cover;">
+                                    <div class="modern-play-btn" onclick="event.stopPropagation(); playTrailer('${trailer.key}')">
+                                        <div class="modern-play-icon"></div>
+                                    </div>
+                                    <div style="position:absolute; bottom:0; left:0; width:100%; padding:40px 15px 15px; background:linear-gradient(transparent, rgba(0,0,0,0.95)); cursor:pointer;" onclick="renderMovieDetails(${m.id})">
+                                        <div style="font-weight:900; font-size:18px; color:white; text-decoration: underline; opacity:0.9;">${m.title || 'Sans titre'}</div>
+                                    </div>
+                                </div>
+                            `;
+                            loadedCount++;
+                        }
+                    } catch (err) {
+                        console.warn(`Erreur pour le film ${m.title}:`, err);
+                    }
+                }
+                
+                document.getElementById('trailers-container').innerHTML = trailersHTML || "<div style='padding:15px;'>Aucun résultat. Veuillez réessayer.</div>";
+                
+                if (loadedCount === 0 && trailersHTML === '') {
+                    showError('Impossible de charger les bandes-annonces');
+                }
+            } catch(e) {
+                console.error('Erreur renderSorties:', e);
+                document.getElementById('trailers-container').innerHTML = "<div style='padding:15px; color:#f44336;'>Erreur: " + e.message + "</div>";
+                showError('Impossible de charger les sorties: ' + e.message);
+            }
+        }
+
+        function playTrailer(ytKey) {
+            const videoFullscreen = document.getElementById('video-fullscreen');
+            const videoContainer = document.getElementById('video-container');
+            videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytKey}?autoplay=1&fs=1&controls=1&modestbranding=1" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>`;
+            videoFullscreen.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVideoFullscreen() {
+            const videoFullscreen = document.getElementById('video-fullscreen');
+            videoFullscreen.classList.remove('active');
+            document.getElementById('video-container').innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
+        // Gestion clavier et gestes
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const videoFullscreen = document.getElementById('video-fullscreen');
+                if (videoFullscreen.classList.contains('active')) {
+                    closeVideoFullscreen();
                 }
             }
-            document.getElementById('trailers-container').innerHTML = html;
-        }
+        });
+
+        // Swipe vers la droite pour fermer la vidéo fullscreen
+        document.addEventListener('touchstart', (e) => {
+            const videoFullscreen = document.getElementById('video-fullscreen');
+            if (videoFullscreen.classList.contains('active')) {
+                touchStartX = e.touches[0].clientX;
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const videoFullscreen = document.getElementById('video-fullscreen');
+            if (videoFullscreen.classList.contains('active') && e.changedTouches[0].clientX > touchStartX + 100) {
+                closeVideoFullscreen();
+            }
+        });
 
         async function renderSearch() {
             setActive(1);
-            document.getElementById('view').innerHTML = `<div class="header-ios"><h1>Recherche</h1></div><div class="search-bar"><input type="text" placeholder="Rechercher..." oninput="executeSearch(this.value)"></div><div id="search-results-area"></div>`;
+            document.querySelector('.edit-link').style.display = 'none';
+            document.getElementById('view').innerHTML = `
+                <div class="header-ios"><h1>Recherche</h1></div>
+                <div class="search-bar" style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: var(--imdb-yellow); font-size: 18px;">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Rechercher un film, une série ou un acteur" oninput="executeSearch(this.value)" style="flex: 1;">
+                </div>
+                <div id="search-results-area"></div>
+            `;
+            loadPopularActors();
         }
 
+        function getSortedGenres() {
+            const genres = [
+                { id: 28, name: 'Action', emoji: '💥' },
+                { id: 16, name: 'Animation', emoji: '👦🏻' },
+                { id: 12, name: 'Aventure', emoji: '🌍' },
+                { id: 36, name: 'Biopic', emoji: '📜' },
+                { id: 35, name: 'Comédie', emoji: '🎭' },
+                { id: 80, name: 'Crime', emoji: '🩸' },
+                { id: 99, name: 'Documentaire', emoji: '📰' },
+                { id: 18, name: 'Drame', emoji: '🥺' },
+                { id: 10751, name: 'Familial', emoji: '🧑‍🧑‍🧒‍🧒' },
+                { id: 14, name: 'Fantastique', emoji: '🐉' },
+                { id: 10752, name: 'Guerre', emoji: '🪖' },
+                { id: 27, name: 'Horreur', emoji: '🧟‍♂️' },
+                { id: 9648, name: 'Mystère', emoji: '🔎' },
+                { id: 10402, name: 'Musical', emoji: '🎤' },
+                { id: 10770, name: 'Péplum', emoji: '🏛️' },
+                { id: 10749, name: 'Romance', emoji: '💞' },
+                { id: 878, name: 'Science-Fiction', emoji: '👽' },
+                { id: 37, name: 'Western', emoji: '🏜️' }
+            ];
+            return genres.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        async function loadPopularActors() {
+            const area = document.getElementById('search-results-area');
+            if (!area) return;
+
+            const actors = ["Denzel Washington", "Robert De Niro", "Al Pacino", "Tom Hanks", "Leonardo DiCaprio", "Bruce Willis", "Morgan Freeman", "Samuel L. Jackson", "Tom Cruise", "Brad Pitt", "Arnold Schwarzenegger", "Sylvester Stallone", "Jason Statham", "Matt Damon", "Christian Bale", "Harrison Ford", "Mark Wahlberg", "Jackie Chan", "Liam Neeson", "Jim Carrey", "Bradley Cooper", "Kiefer Sutherland", "Eddie Murphy", "Will Smith", "Whoopi Goldberg", "Angela Bassett", "Julia Roberts", "Nicole Kidman", "Viola Davis", "Halle Berry", "Angelina Jolie", "Margot Robbie"];
+            const listGenres = getSortedGenres();
+            try {
+                const results = await Promise.all(actors.map(async name => {
+                    try {
+                        const d = await fetchWithTimeout(`https://api.themoviedb.org/3/search/person?api_key=${API_KEY}&query=${encodeURIComponent(name)}&language=fr-FR`);
+                        return d.results?.[0] || null;
+                    } catch (e) {
+                        console.warn(`Erreur recherche acteur ${name}:`, e);
+                        return null;
+                    }
+                }));
+                
+                area.innerHTML = `
+                    <div class="section-title">Genres</div>
+                    <div class="genre-btn-container">
+                        ${listGenres.map(g => `<button class="genre-btn" onclick="openGenreResults(${g.id}, '${g.name}')">${g.emoji} ${g.name}</button>`).join('')}
+                    </div>
+                    <div class="section-title">Acteurs populaires</div>
+                    <div class="grid-3col" style="grid-template-columns: repeat(4, 1fr);">
+                        ${results.filter(a => a).map(a => `<div class="poster-card" onclick="renderActorProfile(${a.id})"><img src="${a.profile_path ? IMG_PATH + a.profile_path : 'placeholder.jpg'}"><div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); text-align:center; font-size:7px; padding:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${a.name || 'Inconnu'}</div></div>`).join('')}
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Erreur loadPopularActors:', e);
+                area.innerHTML = "<div style='padding:15px; color:#f44336;'>Erreur lors du chargement des acteurs</div>";
+            }
+        }
+
+        let searchTimeout;
         async function executeSearch(query) {
-            if(query.length < 3) return;
-            const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${query}&language=fr-FR`).then(r => r.json());
-            document.getElementById('search-results-area').innerHTML = `<div class="grid-3col">${res.results.map(i => `
-                <div class="poster-card" onclick="${i.media_type==='person'?'renderActorProfile':'renderMovieDetails'}(${i.id})">
-                    ${(i.poster_path || i.profile_path) ? `<img src="${IMG_PATH + (i.poster_path || i.profile_path)}">` : `<div class="no-poster">${i.title || i.name}</div>`}
-                </div>`).join('')}</div>`;
+            clearTimeout(searchTimeout);
+            if(query.length < 3) { loadPopularActors(); return; }
+            
+            searchTimeout = setTimeout(async () => {
+                const area = document.getElementById('search-results-area');
+                if (!area) return;
+                
+                try {
+                    const [m, s, a] = await Promise.all([
+                        fetchWithTimeout(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=fr-FR`).catch(e => ({ results: [] })),
+                        fetchWithTimeout(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=fr-FR`).catch(e => ({ results: [] })),
+                        fetchWithTimeout(`https://api.themoviedb.org/3/search/person?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=fr-FR`).catch(e => ({ results: [] }))
+                    ]);
+
+                    if (!m.results && !s.results && !a.results) {
+                        area.innerHTML = "<div style='padding:15px; color:#fdd835;'>Aucun résultat trouvé</div>";
+                        return;
+                    }
+
+                    area.innerHTML = `
+                        ${m.results && m.results.length ? `<div class="section-title">Films</div><div class="grid-3col">${m.results.slice(0,6).map(i => `<div class="poster-card" onclick="renderMovieDetails(${i.id})">${i.poster_path ? `<img src="${IMG_PATH + i.poster_path}">` : `<div class="no-poster" style="font-size:11px;">${i.title || 'Sans titre'}</div>`}<div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); font-size:8px; padding:5px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i.title || 'Sans titre'}</div></div>`).join('')}</div>` : ''}
+                        ${s.results && s.results.length ? `<div class="section-title">Séries</div><div class="grid-3col">${s.results.slice(0,6).map(i => `<div class="poster-card" onclick="renderSerieDetails(${i.id})">${i.poster_path ? `<img src="${IMG_PATH + i.poster_path}">` : `<div class="no-poster" style="font-size:11px;">${i.name || 'Sans titre'}</div>`}<div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); font-size:8px; padding:5px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i.name || 'Sans titre'}</div></div>`).join('')}</div>` : ''}
+                        ${a.results && a.results.length ? `<div class="section-title">Personnes</div><div class="grid-3col">${a.results.slice(0,6).map(i => `<div class="poster-card" onclick="renderActorProfile(${i.id})"><img src="${i.profile_path ? IMG_PATH + i.profile_path : 'placeholder.jpg'}"><div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); font-size:8px; padding:5px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i.name || 'Inconnu'}</div></div>`).join('')}</div>` : ''}
+                    `;
+                
+                } catch (e) {
+                    console.error('Erreur executeSearch:', e);
+                    area.innerHTML = "<div style='padding:15px; color:#f44336;'>Erreur: " + e.message + "</div>";
+                    showError('Erreur lors de la recherche');
+                }
+            }, 500);
+        }
+
+        async function openGenreResults(genreId, genreName) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
+            if (!modal || !body) return;
+
+            modal.style.display = 'block';
+            body.innerHTML = `
+                <h2 style="font-family:'Orbitron'; color:var(--imdb-yellow); text-align:center; margin-bottom:20px;">${genreName}</h2>
+                <div id="genre-grid" class="grid-3col">Chargement...</div>
+            `;
+
+            try {
+                const data = await fetchWithTimeout(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&language=fr-FR&sort_by=popularity.desc`);
+                
+                if (!data.results || !Array.isArray(data.results)) {
+                    throw new Error('Format de réponse invalide');
+                }
+                
+                document.getElementById('genre-grid').innerHTML = data.results.map(m => `
+                    <div class="poster-card" onclick="renderMovieDetails(${m.id})">
+                        ${m.poster_path ? `<img src="${IMG_PATH + m.poster_path}">` : `<div class="no-poster" style="font-size:11px;">${m.title || 'Sans titre'}</div>`}
+                        <div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); font-size:8px; padding:5px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.title || 'Sans titre'}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Erreur openGenreResults:', e);
+                body.innerHTML = "<p style='text-align:center; color:#f44336;'>Erreur: " + e.message + "</p>"; 
+                showError('Impossible de charger les films de ce genre');
+            }
+        }
+
+        function getColorClass(rating) {
+            if (rating >= 7) return 'score-green';
+            if (rating >= 6) return 'score-blue';
+            if (rating >= 5) return 'score-orange';
+            return 'score-red';
+        }
+        
+        function getRatingColor(rating) {
+            if (rating >= 7) return '#4caf50';
+            if (rating >= 6) return '#2196F3';
+            if (rating >= 5) return '#ff9800';
+            return '#f44336';
+        }
+        
+        function getRatingColorClass(rating) {
+            if (rating >= 7) return 'color-green';
+            if (rating >= 6) return 'color-blue';
+            if (rating >= 5) return 'color-orange';
+            return 'color-red';
+        }
+        
+        function getRatingText(rating) {
+            const texts = {
+                10: 'Parfait',
+                9: 'Excellent',
+                8: 'Génial',
+                7: 'Bon',
+                6: 'Correct',
+                5: 'Moyen',
+                4: 'Mauvais',
+                3: 'Aberrant',
+                2: 'Ridicule',
+                1: 'Exécrable'
+            };
+            return texts[Math.round(rating)] || 'N/A';
         }
 
         async function renderMovieDetails(id) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
             modal.style.display = 'block';
-            const [m, c, v] = await Promise.all([
-                fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=fr-FR`).then(r => r.json()),
-                fetch(`https://api.themoviedb.org/3/movie/${id}/credits?api_key=${API_KEY}&language=fr-FR`).then(r => r.json()),
-                fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}&language=fr-FR`).then(r => r.json())
-            ]);
-            const trailer = v.results.find(vid => vid.type === 'Trailer' && vid.site === 'YouTube');
-            let html = `<div class="movie-details-container"><img src="${IMG_PATH + m.poster_path}" class="hero-poster-xxl">
-                <div class="movie-info-bar"><div><h2>${m.title}</h2><div class="movie-metadata">${m.release_date.split('-')[0]}</div></div><div class="score-badge-xxl">⭐ ${m.vote_average.toFixed(1)}</div></div>
-                <div class="cast-rect-scroll">${c.cast.slice(0, 10).map(a => `<div class="actor-rect-card" onclick="renderActorProfile(${a.id})"><img src="${IMG_PATH + a.profile_path}"><div class="actor-rect-name">${a.name}</div></div>`).join('')}</div>
-                <div style="padding:20px;">${m.overview}</div>`;
-            if (trailer) html += `<div style="padding:20px;"><iframe class="trailer-video" src="https://www.youtube.com/embed/${trailer.key}" frameborder="0" allowfullscreen></iframe></div>`;
-            document.getElementById('modal-body').innerHTML = html + `</div>`;
+            body.innerHTML = `<div style="text-align:center; padding:50px; color:var(--imdb-yellow);">Chargement du film...</div>`;
+
+            try {
+                const [m, c, v] = await Promise.all([
+                    fetchWithTimeout(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=fr-FR`),
+                    fetchWithTimeout(`https://api.themoviedb.org/3/movie/${id}/credits?api_key=${API_KEY}&language=fr-FR`),
+                    fetchWithTimeout(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}&language=fr-FR`)
+                ]);
+
+                validateData(m, ['title', 'overview']);
+                validateData(c, ['cast']);
+                validateData(v, ['results']);
+
+                const userReview = db.reviews ? db.reviews.find(r => r.name === m.title) : null;
+                const year = m.release_date ? m.release_date.split('-')[0] : '????';
+                const genres = m.genres ? m.genres.map(g => g.name).slice(0,2).join(', ') : 'Inconnu';
+                const runtime = m.runtime ? `${Math.floor(m.runtime/60)}h${m.runtime%60 < 10 ? '0':''}${m.runtime%60}` : '';
+                const metadata = `${genres} • ${year} ${runtime ? '• ' + runtime : ''}`;
+                const colorClass = getColorClass(m.vote_average);
+                const trailer = v.results?.find(vid => vid.type === 'Trailer' && vid.site === 'YouTube') || v.results?.[0];
+
+                let html = `<div class="movie-details-container">`;
+                html += `<img src="${m.poster_path ? IMG_PATH + m.poster_path : ''}" class="hero-poster-small" alt="${m.title}">`;
+
+                html += `<div class="movie-info-bar"><div class="movie-info-main"><h2>${m.title || 'Film sans titre'}</h2><div class="movie-metadata">${metadata}</div></div><div class="score-badge-xxl ${colorClass}">${m.vote_average ? Math.round(m.vote_average) : '?'}</div></div>`;
+
+                html += `<div class="rating-container"><div class="star-rating" id="userRating" onmouseleave="resetStarColors()">`;
+                for (let i = 1; i <= 10; i++) {
+                    const isActive = userReview && userReview.note >= i ? 'active' : '';
+                    html += `<span class="star ${isActive}" onclick="selectRating(${i})" onmouseover="previewStarColors(${i})">★</span>`;
+                }
+                const isFav = isFavorite('movie', id);
+                const ratingButtonColor = userReview ? getRatingColorClass(userReview.note) : '';
+                html += `</div><div class="rating-text" id="ratingText">${userReview ? getRatingText(userReview.note) : 'Cliquez pour noter...'}</div><div class="rating-buttons"><button class="save-rating-btn ${ratingButtonColor}" id="noteBtn" onclick="saveMovieRating('${m.title}', '${m.poster_path || ''}', 'movie')">NOTER</button><button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('movie', ${id}, '${(m.title || '').replace(/'/g, "\"")}', '${m.poster_path || ''}')">🌟 À VOIR</button></div></div>`;
+                window.currentRating = userReview ? userReview.note : null;
+
+                if (c.cast && c.cast.length > 0) {
+                    html += `<div class="cast-rect-scroll">`;
+                    c.cast.slice(0, 15).forEach(actor => {
+                        if (actor && actor.id) {
+                            html += `<div class="actor-rect-card" onclick="renderActorProfile(${actor.id})"><img src="${actor.profile_path ? IMG_PATH + actor.profile_path : 'https://via.placeholder.com/150x200?text=No+Photo'}" alt="${actor.name || 'Acteur'}"><div class="actor-rect-name">${actor.name || 'Inconnu'}</div></div>`;
+                        }
+                    });
+                    html += `</div>`;
+                }
+
+                html += `<div class="synopsis-section"><strong>Synopsis</strong><p style="margin-top:15px;">${m.overview || "Aucun synopsis disponible."}</p></div>`;
+
+                // Section critique éditorial pour les FILMS
+                if (userReview) {
+                    html += `<div class="review-editorial-card"><div class="review-editorial-title">⭐ Notre critique</div><p class="review-editorial-text">"${userReview.text}"</p><div class="review-editorial-footer"><span></span><div style="display:flex; gap:10px;"><div class="review-badge-editorial">${userReview.note}</div><button onclick="editMovieCritique('${m.title}', ${m.id}, 'movie')" style="background:#f5c518; color:black; border:none; padding:8px 12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:12px;">Modifier</button></div></div></div>`;
+                } else {
+                    html += `<div style="background: white; margin: 25px; border-radius: 12px; padding: 30px; color: black;"><div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; font-weight: 700;">Écrivez votre critique</div><textarea id="reviewText" placeholder="Partagez votre avis..." style="width:100%; background:#f5f5f5; color:#000; border:1px solid #ddd; border-radius:8px; padding:15px; box-sizing:border-box; min-height:100px; font-size:14px;"></textarea><button onclick="saveMovieCritique('${m.title}', ${m.id}, 'movie')" style="background:#f5c518; color:black; border:none; padding:12px 24px; border-radius:8px; font-weight:900; cursor:pointer; margin-top:12px; width:100%; text-transform:uppercase;">Publier</button></div>`;
+                }
+
+                if (trailer) {
+                    html += `<div class="trailer-section"><strong style="color:white; display:block; margin-bottom:15px;">Bande-annonce</strong><div class="trailer-container" id="trailerContainer"><img src="https://img.youtube.com/vi/${trailer.key}/maxresdefault.jpg" style="width:100%; height:auto; aspect-ratio:16/9; object-fit:cover;"><div class="trailer-play-btn" onclick="playTrailerModal('${trailer.key}', this.parentElement)"><div class="trailer-play-icon"></div></div></div></div>`;
+                }
+
+                html += `</div>`;
+                body.innerHTML = html;
+            } catch (e) {
+                console.error('Erreur renderMovieDetails:', e);
+                body.innerHTML = "<p style='text-align:center; color:#f44336;'>Erreur: " + e.message + "</p>";
+                showError('Impossible de charger les détails du film');
+            }
+        }
+        
+        function selectRating(rating) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, idx) => {
+                star.classList.remove('rating-1to4', 'rating-5to5point9', 'rating-6to6point9', 'rating-7to10');
+                if (idx < rating) {
+                    star.classList.add('active');
+                    // Appliquer la couleur basée sur le rating
+                    if (rating >= 7) {
+                        star.classList.add('rating-7to10');
+                    } else if (rating >= 6) {
+                        star.classList.add('rating-6to6point9');
+                    } else if (rating >= 5) {
+                        star.classList.add('rating-5to5point9');
+                    } else {
+                        star.classList.add('rating-1to4');
+                    }
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+            document.getElementById('ratingText').textContent = getRatingText(rating);
+            // Changer la couleur du bouton NOTER
+            const noteBtn = document.getElementById('noteBtn');
+            if (noteBtn) {
+                noteBtn.classList.remove('color-green', 'color-blue', 'color-orange', 'color-red');
+                noteBtn.classList.add(getRatingColorClass(rating));
+            }
+            window.currentRating = rating;
+        }
+        
+        function previewStarColors(previewRating) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, idx) => {
+                star.classList.remove('rating-1to4', 'rating-5to5point9', 'rating-6to6point9', 'rating-7to10');
+                if (idx < previewRating) {
+                    if (previewRating >= 7) {
+                        star.classList.add('rating-7to10');
+                    } else if (previewRating >= 6) {
+                        star.classList.add('rating-6to6point9');
+                    } else if (previewRating >= 5) {
+                        star.classList.add('rating-5to5point9');
+                    } else {
+                        star.classList.add('rating-1to4');
+                    }
+                    star.style.opacity = '1';
+                } else {
+                    star.style.opacity = '0.4';
+                }
+            });
+        }
+        
+        function resetStarColors() {
+            const stars = document.querySelectorAll('.star');
+            const savedRating = window.currentRating || 0;
+            stars.forEach((star, idx) => {
+                star.style.opacity = '1';
+                star.classList.remove('rating-1to4', 'rating-5to5point9', 'rating-6to6point9', 'rating-7to10');
+                if (idx < savedRating) {
+                    if (savedRating >= 7) {
+                        star.classList.add('rating-7to10');
+                    } else if (savedRating >= 6) {
+                        star.classList.add('rating-6to6point9');
+                    } else if (savedRating >= 5) {
+                        star.classList.add('rating-5to5point9');
+                    } else {
+                        star.classList.add('rating-1to4');
+                    }
+                }
+            });
+        }
+        
+        async function saveMovieRating(name, img, type) {
+            if (!window.currentRating) {
+                showError('Veuillez sélectionner une note');
+                return;
+            }
+            
+            const existingIndex = db.reviews.findIndex(r => r.name === name);
+            const newReview = { type, name, img: img && img !== 'null' ? IMG_PATH + img : null, note: window.currentRating, text: 'À noter...', id: window.currentMovieId, timestamp: new Date().toISOString() };
+            
+            if (existingIndex >= 0) {
+                db.reviews[existingIndex] = newReview;
+            } else {
+                db.reviews.push(newReview);
+            }
+            
+            await syncFirebase();
+            showSuccess('Note sauvegardée!');
+            renderActivite();
+        }
+        
+        function saveMovieCritique(name, movieId, type) {
+            const critiques = document.getElementById('reviewText');
+            const text = critiques?.value?.trim();
+            
+            if (!text) {
+                showError('Veuillez écrire une critique');
+                return;
+            }
+            
+            const existingIndex = db.reviews.findIndex(r => r.name === name);
+            if (existingIndex >= 0) {
+                db.reviews[existingIndex].text = text;
+                db.reviews[existingIndex].timestamp = new Date().toISOString();
+                showSuccess('Critique mise à jour!');
+            } else {
+                showError('Film/Série non noté(e)');
+                return;
+            }
+            
+            syncFirebase();
+            closeModal();
+            renderActivite();
+        }
+        
+        function editMovieCritique(name, movieId, type) {
+            const review = db.reviews.find(r => r.name === name);
+            if (!review) return;
+            
+            const modal = document.getElementById('fullModal');
+            modal.style.display = 'block';
+            document.getElementById('modal-body').innerHTML = `
+                <h2>${name}</h2>
+                <textarea id="editReviewText" style="width:100%; height:200px; padding:15px; border:1px solid #333; border-radius:8px; background:#111; color:white; font-family: Poppins, sans-serif; font-size:16px; font-weight:600;">${review.text}</textarea>
+                <button class="save-btn" onclick="updateMovieCritique('${name}', ${movieId}, '${type}')">Sauvegarder</button>
+            `;
+        }
+        
+        async function updateMovieCritique(name, movieId, type) {
+            const text = document.getElementById('editReviewText').value?.trim();
+            if (!text) {
+                showError('Veuillez écrire une critique');
+                return;
+            }
+            
+            const review = db.reviews.find(r => r.name === name);
+            if (review) {
+                review.text = text;
+                review.timestamp = new Date().toISOString();
+                await syncFirebase();
+                showSuccess('Critique mise à jour!');
+                closeModal();
+                renderActivite();
+            }
+        }
+        
+        function playTrailerModal(ytKey, container) {
+            container.innerHTML = `<iframe width="100%" style="aspect-ratio:16/9;" src="https://www.youtube.com/embed/${ytKey}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+        }
+        
+        function toggleFavorite(type, id, name, img) {
+            const favorite = { 
+                type, id, name, 
+                img: img && img !== 'null' ? IMG_PATH + img : null, 
+                addedAt: new Date().toISOString(),
+                timestamp: new Date().toISOString()
+            };
+            const existingIndex = db.favorites.findIndex(f => f.id === id && f.type === type);
+            
+            if (existingIndex >= 0) {
+                db.favorites.splice(existingIndex, 1);
+                document.querySelector('.favorite-btn')?.classList.remove('active');
+                showSuccess('Retiré de À VOIR');
+            } else {
+                db.favorites.push(favorite);
+                document.querySelector('.favorite-btn')?.classList.add('active');
+                showSuccess('Ajouté à À VOIR ❤️');
+                renderActivite();
+            }
+            syncFirebase();
+        }
+        
+        function isFavorite(type, id) {
+            if (!db.favorites) return false;
+            return db.favorites.some(f => f.id === id && f.type === type);
         }
 
-        // --- NOUVELLE FONCTION FILMOGRAPHIE ---
-        async function renderActorProfile(id) {
+        async function renderSerieDetails(id) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
             modal.style.display = 'block';
-            document.getElementById('modal-body').innerHTML = `<p style="text-align:center; padding:50px;">Chargement...</p>`;
+            body.innerHTML = `<div style="text-align:center; padding:50px; color:var(--imdb-yellow);">Chargement de la série...</div>`;
+
+            try {
+                const [m, c, v] = await Promise.all([
+                    fetchWithTimeout(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=fr-FR`),
+                    fetchWithTimeout(`https://api.themoviedb.org/3/tv/${id}/aggregate_credits?api_key=${API_KEY}&language=fr-FR`),
+                    fetchWithTimeout(`https://api.themoviedb.org/3/tv/${id}/videos?api_key=${API_KEY}&language=fr-FR`)
+                ]);
+
+                validateData(m, ['name', 'overview']);
+                validateData(c, ['cast']);
+                validateData(v, ['results']);
+
+                const userReview = db.reviews ? db.reviews.find(r => r.name === m.name) : null;
+                const year = m.first_air_date ? m.first_air_date.split('-')[0] : '????';
+                const genres = m.genres ? m.genres.map(g => g.name).slice(0,2).join(', ') : 'Inconnu';
+                const seasons = m.number_of_seasons ? `${m.number_of_seasons} Saison${m.number_of_seasons > 1 ? 's':''}` : '';
+                const metadata = `${genres} • ${year} ${seasons ? '• ' + seasons : ''}`;
+                const colorClass = getColorClass(m.vote_average);
+                const trailer = v.results?.find(vid => vid.type === 'Trailer' && vid.site === 'YouTube') || v.results?.[0];
+
+                let html = `<div class="movie-details-container">`;
+                html += `<img src="${m.poster_path ? IMG_PATH + m.poster_path : ''}" class="hero-poster-small" alt="${m.name}">`;
+
+                html += `<div class="movie-info-bar"><div class="movie-info-main"><h2>${m.name || 'Série sans titre'}</h2><div class="movie-metadata">${metadata}</div></div><div class="score-badge-xxl ${colorClass}">${m.vote_average ? Math.round(m.vote_average) : '?'}</div></div>`;
+
+                html += `<div class="rating-container"><div class="star-rating" id="userRating" onmouseleave="resetStarColors()">`;
+                for (let i = 1; i <= 10; i++) {
+                    const isActive = userReview && userReview.note >= i ? 'active' : '';
+                    html += `<span class="star ${isActive}" onclick="selectRating(${i})" onmouseover="previewStarColors(${i})">★</span>`;
+                }
+                const isFav = isFavorite('tv', id);
+                const ratingButtonColor = userReview ? getRatingColorClass(userReview.note) : '';
+                html += `</div><div class="rating-text" id="ratingText">${userReview ? getRatingText(userReview.note) : 'Cliquez pour noter...'}</div><div class="rating-buttons"><button class="save-rating-btn ${ratingButtonColor}" id="noteBtn" onclick="saveMovieRating('${m.name}', '${m.poster_path || ''}', 'tv')">NOTER</button><button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('tv', ${id}, '${(m.name || '').replace(/'/g, "\"")}', '${m.poster_path || ''}')">🌟 À VOIR</button></div></div>`;
+                window.currentRating = userReview ? userReview.note : null;
+
+                if (c.cast && c.cast.length > 0) {
+                    html += `<div class="cast-rect-scroll">`;
+                    c.cast.slice(0, 15).forEach(actor => {
+                        if (actor && actor.id) {
+                            html += `<div class="actor-rect-card" onclick="renderActorProfile(${actor.id})"><img src="${actor.profile_path ? IMG_PATH + actor.profile_path : 'https://via.placeholder.com/150x200?text=No+Photo'}" alt="${actor.name || 'Acteur'}"><div class="actor-rect-name">${actor.name || 'Inconnu'}</div></div>`;
+                        }
+                    });
+                    html += `</div>`;
+                }
+
+                html += `<div class="synopsis-section"><strong>Synopsis</strong><p style="margin-top:15px;">${m.overview || "Aucun synopsis disponible."}</p></div>`;
+
+                // Section critique éditorial pour les SÉRIES
+                if (userReview) {
+                    html += `<div class="review-editorial-card"><div class="review-editorial-title">⭐ Notre critique</div><p class="review-editorial-text">"${userReview.text}"</p><div class="review-editorial-footer"><span></span><div style="display:flex; gap:10px;"><div class="review-badge-editorial">${userReview.note}</div><button onclick="editMovieCritique('${m.name}', ${id}, 'tv')" style="background:#f5c518; color:black; border:none; padding:8px 12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:12px;">Modifier</button></div></div></div>`;
+                } else {
+                    html += `<div style="background: white; margin: 25px; border-radius: 12px; padding: 30px; color: black;"><div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; font-weight: 700;">Écrivez votre critique</div><textarea id="reviewText" placeholder="Partagez votre avis..." style="width:100%; background:#f5f5f5; color:#000; border:1px solid #ddd; border-radius:8px; padding:15px; box-sizing:border-box; min-height:100px; font-size:14px;"></textarea><button onclick="saveMovieCritique('${m.name}', ${id}, 'tv')" style="background:#f5c518; color:black; border:none; padding:12px 24px; border-radius:8px; font-weight:900; cursor:pointer; margin-top:12px; width:100%; text-transform:uppercase;">Publier</button></div>`;
+                }
+
+                if (trailer) {
+                    html += `<div class="trailer-section"><strong style="color:white; display:block; margin-bottom:15px;">Bande-annonce</strong><div class="trailer-container" id="trailerContainer"><img src="https://img.youtube.com/vi/${trailer.key}/maxresdefault.jpg" style="width:100%; height:auto; aspect-ratio:16/9; object-fit:cover;"><div class="trailer-play-btn" onclick="playTrailerModal('${trailer.key}', this.parentElement)"><div class="trailer-play-icon"></div></div></div></div>`;
+                }
+
+                html += `</div>`;
+                body.innerHTML = html;
+            } catch (e) {
+                console.error('Erreur renderSerieDetails:', e);
+                body.innerHTML = "<p style='text-align:center; color:#f44336;'>Erreur: " + e.message + "</p>";
+                showError('Impossible de charger les détails de la série');
+            }
+        }
+        /* --- FIN DES FONCTIONS XXL --- */
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        function calculateAge(birthDate) {
+            if (!birthDate) return 'N/A';
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        }
+        
+        function getCountryEmoji(countryCode) {
+            const codePoints = countryCode
+                .toUpperCase()
+                .split('')
+                .map(char => 127397 + char.charCodeAt());
+            return String.fromCodePoint(...codePoints);
+        }
+
+        async function renderActorProfile(id) {
+            const modal = document.getElementById('fullModal');
+            const body = document.getElementById('modal-body');
+            modal.style.display = 'block';
+            body.innerHTML = `<div style="text-align:center; padding:50px; color:var(--imdb-yellow);">Chargement...</div>`;
+            
+            touchStartX = 0;
             
             try {
                 const [p, c] = await Promise.all([
-                    fetch(`https://api.themoviedb.org/3/person/${id}?api_key=${API_KEY}&language=fr-FR`).then(r => r.json()),
-                    fetch(`https://api.themoviedb.org/3/person/${id}/combined_credits?api_key=${API_KEY}&language=fr-FR`).then(r => r.json())
+                    fetchWithTimeout(`https://api.themoviedb.org/3/person/${id}?api_key=${API_KEY}&language=fr-FR`),
+                    fetchWithTimeout(`https://api.themoviedb.org/3/person/${id}/combined_credits?api_key=${API_KEY}&language=fr-FR`)
                 ]);
+                
+                validateData(p, ['name']);
+                validateData(c, ['cast']);
 
-                // Calcul âge et lieu
-                const age = p.birthday ? Math.floor((new Date() - new Date(p.birthday)) / 31557600000) + " ans" : "Âge inconnu";
-                const place = p.place_of_birth ? p.place_of_birth.split(',') : ["Inconnu"];
-                const city = place[0].trim();
-                const country = place[place.length - 1].trim();
-
-                // Tri par date décroissante
                 const sortByDate = (a, b) => {
-                    const dateA = a.release_date || a.first_air_date || '0000-00-00';
-                    const dateB = b.release_date || b.first_air_date || '0000-00-00';
-                    return dateB.localeCompare(dateA);
+                    const dateA = new Date(a.release_date || a.first_air_date || '1900-01-01');
+                    const dateB = new Date(b.release_date || b.first_air_date || '1900-01-01');
+                    return dateB - dateA;
                 };
+                
+                // Filtrer les documentaires, interviews et making of
+                const filterCrewTypes = (items) => {
+                    return items.filter(item => {
+                        const title = (item.title || item.name || '').toLowerCase();
+                        if (item.media_type === 'movie') {
+                            return !title.includes('interview') && !title.includes('making of') && !title.includes('behind');
+                        }
+                        return true;
+                    });
+                };
+                
+                const movies = filterCrewTypes((c.cast || []).filter(m => m.media_type === 'movie')).sort(sortByDate);
+                const series = filterCrewTypes((c.cast || []).filter(m => m.media_type === 'tv')).sort(sortByDate);
+                
+                const age = calculateAge(p.birthday);
+                const birthPlace = p.place_of_birth || 'N/A';
+                const countryCode = birthPlace.match(/^.*[,]\s*([A-Z]{2})$/)?.[1] || 'US';
+                const countryEmoji = getCountryEmoji(countryCode);
+                
+                let html = `<div class="actor-profile-header">`;
+                html += `<img src="${p.profile_path ? IMG_PATH + p.profile_path : 'https://via.placeholder.com/150x150?text=No+Photo'}" class="actor-profile-photo" alt="${p.name || 'Acteur'}">  `;
+                html += `<h2 class="actor-profile-name">${p.name || 'Inconnu'}</h2>`;
+                html += `<div class="actor-profile-info">`;
+                html += `Âge: ${age} ans<br>`;
+                html += `Lieu: ${birthPlace}<br>`;
+                html += `${countryEmoji}${countryCode}`;
+                html += `</div></div>`;
+                
+                html += `<div class="section-title">🎬 Films (${movies.length})</div>`;
+                html += `<div class="filmography-grid">`;
+                // Récupérer les détails pour ajouter les infos
+                const movieDetailsPromises = movies.slice(0, 12).map(m => 
+                    fetchWithTimeout(`https://api.themoviedb.org/3/movie/${m.id}?api_key=${API_KEY}&language=fr-FR`)
+                        .catch(e => ({ ...m, error: true }))
+                );
+                
+                Promise.all(movieDetailsPromises).then(movieDetails => {
+                    let movieHtml = '';
+                    movies.forEach((m, idx) => {
+                        const details = movieDetails[idx];
+                        const year = m.release_date ? m.release_date.split('-')[0] : '????';
+                        const genres = details?.genres ? details.genres.map(g => g.name).slice(0,1).join(', ') : 'Inconnu';
+                        const runtime = details?.runtime ? `${Math.floor(details.runtime/60)}h${details.runtime%60 < 10 ? '0':''}${details.runtime%60}` : '--';
+                        const infoText = `(${year}) - ${genres} - ${runtime}`;
+                        
+                        movieHtml += `<div class="poster-card" style="width:100%; position:relative; display:flex; flex-direction:column;" onclick="renderMovieDetails(${m.id})">`;
+                        if (m.poster_path) {
+                            movieHtml += `<img src="${IMG_PATH + m.poster_path}" alt="${m.title || 'Film'}" style="flex:1; object-fit:cover;">`;
+                        } else {
+                            movieHtml += `<div class="no-poster" style="flex:1;">${m.title || 'Sans titre'}</div>`;
+                        }
+                        movieHtml += `<div style="background: rgba(0,0,0,0.8); color: #aaa; font-size: 10px; padding: 8px; text-align: center; line-height: 1.3;">${infoText}</div>`;
+                        movieHtml += `</div>`;
+                    });
+                    document.querySelectorAll('.filmography-grid')[0].innerHTML = movieHtml;
+                });
+                
+                // Contenu temporaire
+                movies.forEach(m => {
+                    html += `<div class="poster-card" style="width:100%;" onclick="renderMovieDetails(${m.id})">`;
+                    if (m.poster_path) {
+                        html += `<img src="${IMG_PATH + m.poster_path}" alt="${m.title || 'Film'}">`;
+                    } else {
+                        html += `<div class="no-poster">${m.title || 'Sans titre'}</div>`;
+                    }
+                    html += `<div style="background: rgba(0,0,0,0.8); color: #aaa; font-size: 10px; padding: 6px; text-align: center;">Chargement...</div>`;
+                    html += `</div>`;
+                });
+                html += `</div>`;
+                
+                html += `<div class="section-title">📺 Séries (${series.length})</div>`;
+                html += `<div class="filmography-grid">`;
+                // Récupérer les détails pour ajouter les infos
+                const seriesDetailsPromises = series.slice(0, 12).map(s => 
+                    fetchWithTimeout(`https://api.themoviedb.org/3/tv/${s.id}?api_key=${API_KEY}&language=fr-FR`)
+                        .catch(e => ({ ...s, error: true }))
+                );
+                
+                Promise.all(seriesDetailsPromises).then(seriesDetails => {
+                    let seriesHtml = '';
+                    series.forEach((s, idx) => {
+                        const details = seriesDetails[idx];
+                        const year = s.first_air_date ? s.first_air_date.split('-')[0] : '????';
+                        const genres = details?.genres ? details.genres.map(g => g.name).slice(0,1).join(', ') : 'Inconnu';
+                        const seasons = details?.number_of_seasons ? `${details.number_of_seasons} saison${details.number_of_seasons > 1 ? 's' : ''}` : '--';
+                        const infoText = `(${year}) - ${genres} - ${seasons}`;
+                        
+                        seriesHtml += `<div class="poster-card" style="width:100%; position:relative; display:flex; flex-direction:column;" onclick="renderSerieDetails(${s.id})">`;
+                        if (s.poster_path) {
+                            seriesHtml += `<img src="${IMG_PATH + s.poster_path}" alt="${s.name || 'Série'}" style="flex:1; object-fit:cover;">`;
+                        } else {
+                            seriesHtml += `<div class="no-poster" style="flex:1;">${s.name || 'Sans titre'}</div>`;
+                        }
+                        seriesHtml += `<div style="background: rgba(0,0,0,0.8); color: #aaa; font-size: 10px; padding: 8px; text-align: center; line-height: 1.3;">${infoText}</div>`;
+                        seriesHtml += `</div>`;
+                    });
+                    const gridArray = document.querySelectorAll('.filmography-grid');
+                    if (gridArray.length > 1) {
+                        gridArray[1].innerHTML = seriesHtml;
+                    }
+                });
+                
+                // Contenu temporaire
+                series.forEach(s => {
+                    html += `<div class="poster-card" style="width:100%;" onclick="renderSerieDetails(${s.id})">`;
+                    if (s.poster_path) {
+                        html += `<img src="${IMG_PATH + s.poster_path}" alt="${s.name || 'Série'}">`;
+                    } else {
+                        html += `<div class="no-poster">${s.name || 'Sans titre'}</div>`;
+                    }
+                    html += `<div style="background: rgba(0,0,0,0.8); color: #aaa; font-size: 10px; padding: 6px; text-align: center;">Chargement...</div>`;
+                    html += `</div>`;
+                });
+                html += `</div>`;
+                
+                body.innerHTML = html;
+                
+                // Geste swipe pour fermer
+                modal.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                });
+                
+                modal.addEventListener('touchend', (e) => {
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const diffX = touchEndX - touchStartX;
+                    const diffY = Math.abs(touchEndY - touchStartY);
+                    
+                    if (diffX > 100 && diffY < 50 && touchStartX < 50) {
+                        closeModal();
+                    }
+                }, { once: true });
+                
+            } catch (e) {
+                console.error('Erreur renderActorProfile:', e);
+                body.innerHTML = "<p style='text-align:center; color:#f44336;'>Erreur: " + e.message + "</p>";
+                showError('Impossible de charger le profil de l\'acteur');
+            }
+        }
 
-                const movies = c.cast.filter(m => m.media_type === 'movie').sort(sortByDate);
-                const series = c.cast.filter(m => m.media_type === 'tv').sort(sortByDate);
+        function renderMesTop() {
+            setActive(2);
+            document.querySelector('.edit-link').style.display = 'block';
+            document.getElementById('view').innerHTML = `<div class="header-ios"><h1>Mes GOAT</h1></div>${buildTopSection('MON TOP 12 - FILMS', 'movies')}${buildTopSection('MON TOP 12 - SÉRIES', 'series')}${buildTopSection('MON TOP 12 - FOOTBALLEURS', 'actors')}${buildTopSection('MON TOP 12 - ARTISTES', 'artists')}`;
+        }
 
-                let html = `
-                    <div class="actor-header">
-                        <img src="${IMG_PATH + p.profile_path}">
-                        <h1 class="actor-name-big">${p.name}</h1>
-                        <div class="actor-info-line">${age} • ${city} • ${country}</div>
-                    </div>
+        function buildTopSection(title, type) {
+            const list = db.tops[type] || [];
+            let html = `<div class="section-title">${title}</div><div class="grid-3col">`;
+            
+            list.forEach((item, index) => {
+                let badgeClass = 'rank-badge-white';
+                if (index === 0) badgeClass = 'rank-badge-gold';
+                else if (index === 1) badgeClass = 'rank-badge-silver';
+                else if (index === 2) badgeClass = 'rank-badge-bronze';
+                
+                html += `<div class="poster-card" style="width:100%;">
+                            <div class="rank-badge ${badgeClass}">${index + 1}</div>
+                            <button class="remove-btn" onclick="removeFromTop('${type}', ${index})">×</button>
+                            ${item.img ? `<img src="${item.img}">` : `<div class="no-poster">${item.name}</div>`}
+                        </div>`;
+            });
 
-                    <div class="section-title">Films</div>
-                    <div class="grid-3col">
-                        ${movies.map(m => `
-                            <div class="poster-card" onclick="renderMovieDetails(${m.id})">
-                                ${m.poster_path ? `<img src="${IMG_PATH + m.poster_path}">` : `<div class="no-poster">${m.title}</div>`}
-                            </div>`).join('')}
-                    </div>
+            if (list.length < 12) {
+                html += `
+                <div class="poster-card add-card" style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 2px dashed #444; border-radius:12px; min-height:150px;" onclick="openAddTopModal('${type}')">
+                    <span style="font-size:30px; margin-bottom:10px;">➕</span>
+                    <span style="font-size:12px; color:#aaa; font-weight:bold; text-transform:uppercase;">Ajouter</span>
+                </div>`;
+            }
 
-                    <div class="section-title">Séries</div>
-                    <div class="grid-3col">
-                        ${series.map(s => `
-                            <div class="poster-card" onclick="renderMovieDetails(${s.id})">
-                                ${s.poster_path ? `<img src="${IMG_PATH + s.poster_path}">` : `<div class="no-poster">${s.name}</div>`}
-                            </div>`).join('')}
+            return html + `</div>`;
+        }
+
+        async function removeFromTop(type, index) { db.tops[type].splice(index, 1); await syncFirebase(); renderMesTop(); }
+
+        function openAddTopModal(type) {
+            const modal = document.getElementById('fullModal');
+            modal.style.display = 'block';
+            
+            let titleText = type === 'movies' ? 'un film' : (type === 'series' ? 'une série' : (type === 'actors' ? 'un footballeur' : 'un artiste'));
+            let q = type === 'movies' ? 'movie' : (type === 'series' ? 'tv' : 'person');
+            
+            document.getElementById('modal-body').innerHTML = `
+                <h2 style="text-align:center; color:var(--imdb-yellow); margin-bottom:20px;">Ajouter ${titleText}</h2>
+                <div class="search-bar">
+                    <span style="color:#888;">🔍</span>
+                    <input type="text" id="searchTopInput" class="rate-input" placeholder="Taper pour chercher..." style="margin:0; flex:1;" oninput="searchForTop(this.value, '${q}', '${type}')">
+                </div>
+                <div id="top-search-results" class="grid-3col" style="padding:20px 0;"></div>
+            `;
+            
+            // Charger quelques suggestions populaires
+            loadTopSuggestions(q, type);
+        }
+        
+        async function loadTopSuggestions(apiType, dbType) {
+            try {
+                let endpoint = '';
+                if (apiType === 'movie') endpoint = `https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}&language=fr-FR`;
+                else if (apiType === 'tv') endpoint = `https://api.themoviedb.org/3/trending/tv/week?api_key=${API_KEY}&language=fr-FR`;
+                else endpoint = `https://api.themoviedb.org/3/trending/person/week?api_key=${API_KEY}&language=fr-FR`;
+                
+                const res = await fetchWithTimeout(endpoint);
+                const results = res.results?.slice(0, 6) || [];
+                
+                let html = results.map(item => {
+                    const img = item.poster_path || item.profile_path;
+                    return `<div class="poster-card" style="width:100%; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="addToTop('${dbType}', '${(item.title || item.name || 'Sans titre').replace(/'/g, "\\'")}', '${img ? IMG_PATH + img : 'null'}')">
+                        ${img ? `<img src="${IMG_PATH + img}" style="width:100%; height:100%; object-fit:cover;">` : `<div class="no-poster" style="font-size:11px;">${item.title || item.name || 'Sans titre'}</div>`}
+                        <div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); padding:8px; text-align:center; font-size:10px; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.title || item.name || 'Sans titre'}</div>
+                    </div>`;
+                }).join('');
+                
+                document.getElementById('top-search-results').innerHTML = html || "<div style='padding:15px; color:#888;'>Aucune suggestion</div>";
+            } catch (e) {
+                console.error('Erreur loadTopSuggestions:', e);
+            }
+        }
+
+        async function searchForTop(query, apiType, dbType) {
+            if(query.length < 2) { loadTopSuggestions(apiType, dbType); return; }
+            try {
+                const res = await fetchWithTimeout(`https://api.themoviedb.org/3/search/${apiType}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=fr-FR&page=1`);
+                validateData(res, ['results']);
+                
+                const results = res.results?.slice(0, 8) || [];
+                document.getElementById('top-search-results').innerHTML = results.map(item => {
+                    const img = item.poster_path || item.profile_path;
+                    return `<div class="poster-card" style="width:100%; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="addToTop('${dbType}', '${(item.title || item.name || 'Sans titre').replace(/'/g, "\\'")}', '${img ? IMG_PATH + img : 'null'}')">
+                        ${img ? `<img src="${IMG_PATH + img}" style="width:100%; height:100%; object-fit:cover;">` : `<div class="no-poster" style="font-size:11px;">${item.title || item.name || 'Sans titre'}</div>`}
+                        <div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.8); padding:8px; text-align:center; font-size:10px; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.title || item.name || 'Sans titre'}</div>
+                    </div>`;
+                }).join('') || "<div style='padding:15px; color:#f44336;'>Aucun résultat trouvé</div>";
+            } catch (e) {
+                console.error('Erreur searchForTop:', e);
+                document.getElementById('top-search-results').innerHTML = "<div style='padding:15px; color:#f44336;'>Erreur de recherche</div>";
+                showError('Erreur lors de la recherche');
+            }
+        }
+
+        async function addToTop(type, name, img) { 
+            try {
+                if (!name || name.trim().length === 0) {
+                    showError('Nom invalide');
+                    return;
+                }
+                
+                db.tops[type] = db.tops[type] || [];
+                if (db.tops[type].length >= 12) {
+                    showError('Vous avez atteint le maximum de 12 entrées');
+                    return;
+                }
+                
+                db.tops[type].push({ name, img: img !== 'null' ? img : null });
+                await syncFirebase(); 
+                closeModal(); 
+                renderMesTop();
+            } catch (e) {
+                console.error('Erreur addToTop:', e);
+                showError('Erreur lors de l\'ajout');
+            }
+        }
+
+        function renderActivite() {
+            setActive(3);
+            try {
+                const reviews = db.reviews || [];
+                const favorites = db.favorites || [];
+                
+                let feedHTML = '';
+                
+                if (reviews.length === 0 && favorites.length === 0) {
+                    feedHTML = '<div style="text-align:center; padding:40px; color:var(--imdb-yellow);">Aucune activité</div>';
+                } else {
+                    // Créer toutes les actions
+                    const allActions = [];
+                    
+                    reviews.forEach(r => {
+                        if (r.text && r.text !== 'À noter...') {
+                            allActions.push({
+                                type: 'critique',
+                                item: r,
+                                timestamp: r.timestamp || new Date(0).toISOString()
+                            });
+                        }
+                        allActions.push({
+                            type: 'note',
+                            item: r,
+                            timestamp: r.timestamp || new Date(0).toISOString()
+                        });
+                    });
+                    
+                    favorites.forEach(f => {
+                        allActions.push({
+                            type: 'favori',
+                            item: f,
+                            timestamp: f.timestamp || new Date(0).toISOString()
+                        });
+                    });
+                    
+                    allActions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    feedHTML = allActions.map(action => {
+                        const date = new Date(action.timestamp).toLocaleDateString('fr-FR');
+                        const user = db.user || {};
+                        
+                        if (action.type === 'critique') {
+                            return `<div style="padding: 20px 15px; border-bottom: 1px solid #222; background: #0a0a0a;">
+                                <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
+                                    <img src="${user.avatar || 'https://via.placeholder.com/32x32?text=U'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; color: white; font-size: 13px;">${user.displayName || 'Utilisateur'} <span style="font-weight: 400; color: #aaa;">a écrit une nouvelle critique</span></div>
+                                        <div style="font-size: 10px; color: #666; margin-top: 4px;">${date}</div>
+                                    </div>
+                                </div>
+                                <div style="background: white; color: black; padding: 12px; border-radius: 6px; margin: 8px 0; font-size: 13px; line-height: 1.5;">"${action.item.text}"</div>
+                            </div>`;
+                        } else if (action.type === 'note') {
+                            const color = action.item.note >= 7 ? '#4caf50' : action.item.note >= 6 ? '#2196F3' : action.item.note >= 5 ? '#ff9800' : '#f44336';
+                            return `<div style="padding: 15px; border-bottom: 1px solid #222;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <img src="${user.avatar || 'https://via.placeholder.com/32x32?text=U'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+                                    <div style="flex: 1; font-size: 12px;">
+                                        <div style="font-weight: 700; color: white;">${user.displayName || 'Utilisateur'}</div>
+                                        <div style="color: #aaa;">a attribué <span style="color: ${color}; font-weight: 700;">${action.item.note}/10</span> au ${action.item.type === 'movie' ? 'film' : 'série'}</div>
+                                    </div>
+                                    <div style="font-size: 10px; color: #666; text-align: right;">${date}</div>
+                                </div>
+                            </div>`;
+                        } else {
+                            return `<div style="padding: 15px; border-bottom: 1px solid #222;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <img src="${user.avatar || 'https://via.placeholder.com/32x32?text=U'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+                                    <div style="flex: 1; font-size: 12px;">
+                                        <div style="font-weight: 700; color: white;">${user.displayName || 'Utilisateur'}</div>
+                                        <div style="color: #aaa;">a envie de voir le ${action.item.type === 'movie' ? 'film' : 'série'} <span style="color: var(--imdb-yellow); font-weight: 600;">${action.item.name}</span></div>
+                                    </div>
+                                    <div style="font-size: 10px; color: #666; text-align: right;">${date}</div>
+                                </div>
+                            </div>`;
+                        }
+                    }).join('');
+                }
+                
+                document.getElementById('view').innerHTML = `
+                    <div class="brand-title">CINÉ SCORE<br><span>by @wb10officiel</span></div>
+                    <div class="header-ios"><h1>Activité</h1></div>
+                    <div style="padding-bottom: 20px;">
+                        <div class="stats-ribbon">
+                            <div class="stat-box"><span class="stat-val">${reviews.filter(r=>r.type==='movie').length}</span><span class="stat-lbl">Films</span></div>
+                            <div class="stat-box"><span class="stat-val">${reviews.filter(r=>r.type==='tv').length}</span><span class="stat-lbl">Séries</span></div>
+                            <div class="stat-box"><span class="stat-val">${favorites.length}</span><span class="stat-lbl">À Voir</span></div>
+                        </div>
+                        ${feedHTML}
                     </div>
                 `;
-                document.getElementById('modal-body').innerHTML = html;
-            } catch (e) { document.getElementById('modal-body').innerHTML = "Erreur de chargement"; }
+            } catch (e) {
+                console.error('Erreur renderActivite:', e);
+                document.getElementById('view').innerHTML = '<div style="padding: 20px; color: #f44336;">Erreur lors du chargement de l\'activité</div>';
+            }
         }
 
-        async function renderMesTop() {
-            setActive(2);
-            let html = `<div class="header-ios"><h1>Mes Tops</h1></div>`;
-            ['movies', 'series', 'actors'].forEach(type => {
-                html += `<div class="section-title">Top ${type}</div><div class="grid-3col">
-                    ${db.tops[type].map(item => `<div class="poster-card"><img src="${item.img}"></div>`).join('')}
-                </div>`;
-            });
-            document.getElementById('view').innerHTML = html;
+        async function deleteReview(i) { db.reviews.splice(i, 1); await syncFirebase(); renderActivite(); }
+
+        function openAddReviewModal() {
+            const modal = document.getElementById('fullModal');
+            modal.style.display = 'block';
+            document.getElementById('modal-body').innerHTML = `<h2>Nouvelle Critique</h2><input type="text" class="rate-input" placeholder="Chercher..." oninput="searchForReview(this.value)"><div id="review-search-results" class="grid-3col" style="padding:20px 0;"></div>`;
         }
 
-        function renderCritiques() {
-            setActive(3);
-            const reviews = db.reviews || [];
-            document.getElementById('view').innerHTML = `<div class="header-ios"><h1>Mes Critiques</h1></div>
-                ${reviews.map(r => `<div class="review-card"><img src="${r.img}" class="review-poster"><div><h3>${r.name}</h3><div class="review-note">${r.note}/10</div><p>"${r.text}"</p></div></div>`).join('')}`;
+        async function searchForReview(q) {
+            if(q.length < 3) return;
+            try {
+                const res = await fetchWithTimeout(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(q)}&language=fr-FR`);
+                validateData(res, ['results']);
+                
+                const filtered = (res.results || []).filter(item => item.media_type === 'movie' || item.media_type === 'tv');
+                document.getElementById('review-search-results').innerHTML = filtered.slice(0,6).map(item => `<div class="poster-card" style="width:100%;" onclick="showReviewForm('${item.media_type}', '${(item.title || item.name || 'Sans titre').replace(/'/g, "\\'")}', '${item.poster_path || ''}')" alt="${item.title || item.name || 'Sans titre'}"><img src="${item.poster_path ? IMG_PATH + item.poster_path : 'https://via.placeholder.com/100x150?text=No+Poster'}"></div>`).join('');
+            } catch (e) {
+                console.error('Erreur searchForReview:', e);
+                document.getElementById('review-search-results').innerHTML = "<div style='padding:15px; color:#f44336;'>Erreur de recherche</div>";
+                showError('Erreur lors de la recherche');
+            }
+        }
+
+        function showReviewForm(type, name, img) {
+            document.getElementById('modal-body').innerHTML = `<h2>${name}</h2><label>Note /10</label><input type="number" id="rev-note" class="rate-input" min="1" max="10"><label>Critique</label><textarea id="rev-text"></textarea><button class="save-btn" onclick="saveReview('${type}', '${name}', '${img}')">Sauvegarder</button>`;
+        }
+
+        async function saveReview(type, name, img) {
+            try {
+                const note = parseInt(document.getElementById('rev-note').value);
+                const text = document.getElementById('rev-text').value;
+                
+                // Validation
+                if (!note || note < 1 || note > 10) {
+                    showError('La note doit être entre 1 et 10');
+                    return;
+                }
+                if (!text || text.trim().length === 0) {
+                    showError('Veuillez ajouter un texte de critique');
+                    return;
+                }
+                if (text.length < 10) {
+                    showError('La critique doit contenir au moins 10 caractères');
+                    return;
+                }
+                
+                db.reviews.push({ 
+                    type, 
+                    name: name || 'Sans titre', 
+                    img: img && img !== 'null' ? IMG_PATH + img : null, 
+                    note, 
+                    text,
+                    timestamp: new Date().toISOString()
+                });
+                await syncFirebase(); 
+                closeModal(); 
+                renderActivite();
+            } catch (e) {
+                console.error('Erreur saveReview:', e);
+                showError('Erreur lors de la sauvegarde: ' + e.message);
+            }
+        }
+
+        function renderProfilContent(filter = 'voirplus') {
+            try {
+                const reviews = db.reviews || [];
+                const favorites = db.favorites || [];
+                let contentHTML = '';
+                
+                if (filter === 'voirplus') {
+                    // À VOIR
+                    if (favorites.length === 0) {
+                        contentHTML = '<div style="text-align:center; padding:40px; color:var(--imdb-yellow);">Aucun film à voir</div>';
+                    } else {
+                        contentHTML = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 15px 15px;">' + 
+                            favorites.map(f => `
+                                <div style="cursor:pointer; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #222; position: relative;" onclick="renderMovieDetails(${f.id})">
+                                    <div style="aspect-ratio: 2/3; background: #0a0a0a;">
+                                        ${f.img ? `<img src="${f.img}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="width:100%;height:100%;background:var(--imdb-yellow);display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;text-align:center;font-size:11px;padding:5px;">${f.name}</div>`}
+                                    </div>
+                                    <div style="padding: 8px; font-size: 11px; font-weight: 600; color: #aaa; text-align: center;">${f.name}</div>
+                                </div>
+                            `).join('') + '</div>';
+                    }
+                } else if (filter === 'films') {
+                    // FILMS
+                    const films = reviews.filter(r => r.type === 'movie').slice().reverse();
+                    if (films.length === 0) {
+                        contentHTML = '<div style="text-align:center; padding:40px; color:var(--imdb-yellow);">Aucun film noté</div>';
+                    } else {
+                        contentHTML = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 15px 15px;">' +
+                            films.map(r => `
+                                <div style="border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #222; position: relative;" onclick="renderMovieDetails(${r.id})">
+                                    <div style="aspect-ratio: 2/3; background: #0a0a0a; position: relative;">
+                                        ${r.img ? `<img src="${r.img}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="width:100%;height:100%;background:var(--imdb-yellow);display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;text-align:center;font-size:11px;padding:5px;">${r.name}</div>`}
+                                        <div style="position: absolute; top: 5px; right: 5px; background: ${r.note>=7?'#4caf50':r.note>=6?'#2196F3':r.note>=5?'#ff9800':'#f44336'}; color: white; padding: 3px 6px; border-radius: 3px; font-size: 10px; font-weight: 700;">${r.note}</div>
+                                    </div>
+                                    <div style="padding: 8px; font-size: 11px; font-weight: 600; color: #aaa; text-align: center;">${r.name}</div>
+                                </div>
+                            `).join('') + '</div>';
+                    }
+                } else if (filter === 'series') {
+                    // SÉRIES
+                    const series = reviews.filter(r => r.type === 'tv').slice().reverse();
+                    if (series.length === 0) {
+                        contentHTML = '<div style="text-align:center; padding:40px; color:var(--imdb-yellow);">Aucune série notée</div>';
+                    } else {
+                        contentHTML = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 15px 15px;">' +
+                            series.map(r => `
+                                <div style="border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #222; position: relative;" onclick="renderSerieDetails(${r.id})">
+                                    <div style="aspect-ratio: 2/3; background: #0a0a0a; position: relative;">
+                                        ${r.img ? `<img src="${r.img}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="width:100%;height:100%;background:var(--imdb-yellow);display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;text-align:center;font-size:11px;padding:5px;">${r.name}</div>`}
+                                        <div style="position: absolute; top: 5px; right: 5px; background: ${r.note>=7?'#4caf50':r.note>=6?'#2196F3':r.note>=5?'#ff9800':'#f44336'}; color: white; padding: 3px 6px; border-radius: 3px; font-size: 10px; font-weight: 700;">${r.note}</div>
+                                    </div>
+                                    <div style="padding: 8px; font-size: 11px; font-weight: 600; color: #aaa; text-align: center;">${r.name}</div>
+                                </div>
+                            `).join('') + '</div>';
+                    }
+                } else if (filter === 'critiques') {
+                    // CRITIQUES
+                    if (reviews.length === 0) {
+                        contentHTML = '<div style="text-align:center; padding:40px; color:var(--imdb-yellow);">Aucune critique</div>';
+                    } else {
+                        contentHTML = '<div style="padding: 15px;">' +
+                            reviews.slice().reverse().filter(r => r.text && r.text !== 'À noter...').map(r => `
+                                <div style="background: #0a0a0a; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 3px solid var(--imdb-yellow);">
+                                    <div style="color: white; font-weight: 700; margin-bottom: 6px;">${r.name}</div>
+                                    <div style="color: #aaa; font-size: 12px; margin-bottom: 8px;">Note: <span style="color: ${r.note>=7?'#4caf50':r.note>=6?'#2196F3':r.note>=5?'#ff9800':'#f44336'}; font-weight: 700;">${r.note}/10</span></div>
+                                    <p style="color: #ccc; font-size: 13px; line-height: 1.5; margin: 0; font-style: italic;">"${r.text}"</p>
+                                </div>
+                            `).join('') + '</div>';
+                    }
+                }
+                
+                document.getElementById('profil-content').innerHTML = contentHTML;
+            } catch (e) {
+                console.error('Erreur renderProfilContent:', e);
+                document.getElementById('profil-content').innerHTML = '<div style="padding: 20px; color: #f44336;">Erreur lors du chargement du contenu</div>';
+            }
+        }
+
+        function renderProfil() {
+            setActive(4);
+            try {
+                const reviews = db.reviews || [];
+                const favorites = db.favorites || [];
+                const movieCount = reviews.filter(r => r.type === 'movie').length;
+                const tvCount = reviews.filter(r => r.type === 'tv').length;
+                const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.note, 0) / reviews.length).toFixed(1) : 0;
+
+                document.getElementById('view').innerHTML = `
+                    <div class="brand-title">CINÉ SCORE<br><span>by @wb10officiel</span></div>
+                    <div class="header-ios" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h1 style="margin: 0;">Profil</h1>
+                        <div style="text-align: center;">
+                            <div class="user-profile-avatar" id="profilePhotoDisplay" style="width: 70px; height: 70px; background: #1a1a1a; border: 3px solid var(--imdb-yellow); cursor: pointer; display: flex; align-items: center; justify-content: center;" onclick="document.getElementById('profilePhotoInput').click()">
+                                <img src="${db.user.avatar || 'https://via.placeholder.com/70x70?text=Photo'}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                            </div>
+                            <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;" onchange="updateProfilePhoto()">
+                            <div style="font-size: 10px; color: #aaa; margin-top: 6px; text-transform: uppercase;">Changer photo</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1a1a1a; padding: 20px 15px; margin: 15px; border-radius: 8px; border-left: 3px solid var(--imdb-yellow);">
+                        <h3 style="color: var(--imdb-yellow); margin: 0 0 10px 0; font-family: Orbitron; font-size: 14px; text-transform: uppercase;">À propos</h3>
+                        <p style="color: #ccc; line-height: 1.6; margin: 0; font-size: 13px;">
+                            ${db.user.bio && db.user.bio.trim() ? db.user.bio : '<em style="color: #888;">Pas encore de biographie</em>'}
+                        </p>
+                    </div>
+                    
+                    <div class="stats-ribbon">
+                        <div class="stat-box"><span class="stat-val">${movieCount}</span><span class="stat-lbl">Films notés</span></div>
+                        <div class="stat-box"><span class="stat-val">${tvCount}</span><span class="stat-lbl">Séries notées</span></div>
+                        <div class="stat-box"><span class="stat-val">${avgRating}</span><span class="stat-lbl">Moyenne</span></div>
+                    </div>
+                    
+                    <div class="filter-btn-group">
+                        <button class="filter-btn active" onclick="switchProfilFilter('voirplus')">À Voir</button>
+                        <button class="filter-btn" onclick="switchProfilFilter('films')">Films</button>
+                        <button class="filter-btn" onclick="switchProfilFilter('series')">Séries</button>
+                        <button class="filter-btn" onclick="switchProfilFilter('critiques')">Critiques</button>
+                    </div>
+                    
+                    <div id="profil-content"></div>
+                `;
+                
+                renderProfilContent('voirplus');
+            } catch (e) {
+                console.error('Erreur renderProfil:', e);
+                document.getElementById('view').innerHTML = '<div style="padding: 20px; color: #f44336;">Erreur lors du chargement du profil</div>';
+            }
+        }
+        
+        function switchProfilFilter(filter) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderProfilContent(filter);
+        }
+        
+        function updateProfilePhoto() {
+            const input = document.getElementById('profilePhotoInput');
+            const file = input.files?.[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                db.user.avatar = e.target.result;
+                document.getElementById('userAvatar').src = e.target.result;
+                document.getElementById('profilePhotoDisplay').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                syncFirebase();
+                showSuccess('Photo de profil mise à jour!');
+            };
+            reader.readAsDataURL(file);
         }
 
         loadData().then(() => renderSorties());
+        
+        function toggleEdit() {
+            const btns = document.querySelectorAll('.remove-btn');
+            btns.forEach(btn => {
+                if (btn.style.display === 'flex') {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = 'flex';
+                }
+            });
+        }
+
+        function openSettings() {
+            const modal = document.getElementById('fullModal');
+            modal.style.display = 'block';
+            
+            const html = `
+                <div style="position: relative;">
+                    <button style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--imdb-yellow);" onclick="closeModal()">×</button>
+                    
+                    <h2 style="color: var(--imdb-yellow); text-align: center; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">⚙️ Paramètres</h2>
+                    
+                    <div style="max-width: 100%; margin: 30px 0;">
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Nom d'utilisateur:</label>
+                            <input type="text" id="settingsUsername" value="${db.user.username || ''}" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Nom d'affichage:</label>
+                            <input type="text" id="settingsDisplayName" value="${db.user.displayName || ''}" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Biographie:</label>
+                            <textarea id="settingsBio" style="width: 100%; height: 120px; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box; resize: vertical; line-height: 1.6;">${db.user.bio || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Âge:</label>
+                            <input type="number" id="settingsAge" value="${db.user.age || ''}" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Genre:</label>
+                            <select id="settingsGender" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                                <option value="">Sélectionner...</option>
+                                <option value="male" ${db.user.gender === 'male' ? 'selected' : ''}>Homme</option>
+                                <option value="female" ${db.user.gender === 'female' ? 'selected' : ''}>Femme</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Pays:</label>
+                            <input type="text" id="settingsCountry" value="${db.user.country || ''}" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Site Web:</label>
+                            <input type="url" id="settingsWebsite" value="${db.user.website || ''}" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Instagram:</label>
+                            <input type="text" id="settingsInstagram" value="${db.user.instagram || ''}" placeholder="@username" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Snapchat:</label>
+                            <input type="text" id="settingsSnapchat" value="${db.user.snapchat || ''}" placeholder="@username" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="margin-bottom: 30px;">
+                            <label style="display: block; color: var(--imdb-yellow); font-weight: 700; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Nouveau mot de passe:</label>
+                            <input type="password" id="settingsPassword" placeholder="Laisser vide pour conserver le mot de passe actuel" style="width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: Inter, sans-serif; box-sizing: border-box;">
+                        </div>
+                        
+                        <button onclick="saveSettings()" style="width: 100%; padding: 15px; background: var(--imdb-yellow); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s ease;">
+                            Sauvegarder Paramètres
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modal-body').innerHTML = html;
+        }
+
+        function saveSettings() {
+            const username = document.getElementById('settingsUsername').value.trim();
+            const displayName = document.getElementById('settingsDisplayName').value.trim();
+            const bio = document.getElementById('settingsBio').value.trim();
+            const age = document.getElementById('settingsAge').value;
+            const gender = document.getElementById('settingsGender').value;
+            const country = document.getElementById('settingsCountry').value.trim();
+            const website = document.getElementById('settingsWebsite').value.trim();
+            const instagram = document.getElementById('settingsInstagram').value.trim();
+            const snapchat = document.getElementById('settingsSnapchat').value.trim();
+            const password = document.getElementById('settingsPassword').value.trim();
+
+            // Validation basique
+            if (!username) {
+                showError('Le nom d\'utilisateur est obligatoire');
+                return;
+            }
+
+            if (!displayName) {
+                showError('Le nom d\'affichage est obligatoire');
+                return;
+            }
+
+            // Mise à jour de l'objet db.user
+            db.user.username = username;
+            db.user.displayName = displayName;
+            db.user.bio = bio;
+            db.user.age = age ? parseInt(age) : null;
+            db.user.gender = gender || null;
+            db.user.country = country;
+            db.user.website = website;
+            db.user.instagram = instagram;
+            db.user.snapchat = snapchat;
+            
+            if (password) {
+                db.user.password = password;
+            }
+
+            // Synchronisation avec Firebase
+            syncFirebase().then(() => {
+                showSuccess('Paramètres sauvegardés avec succès!');
+                closeModal();
+                renderProfil();
+            }).catch(e => {
+                console.error('Erreur lors de la sauvegarde:', e);
+                showError('Erreur lors de la sauvegarde des paramètres');
+            });
+        }
+
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.textContent = '✗ ' + message;
+            toast.style.background = '#f44336';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
