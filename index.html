@@ -83,8 +83,8 @@ body {
     justify-content: space-around;
     align-items: center;
     /* On augmente l'espace en haut et en bas des icônes */
-padding-top: 15px; 
-    padding-bottom: calc(30px + env(safe-area-inset-bottom));
+    padding-top: 12px; 
+    padding-bottom: calc(18px + env(safe-area-inset-bottom)); 
     z-index: 1000;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -141,9 +141,6 @@ padding-top: 15px;
         .actor-profile-photo { width: 180px; height: 270px; border-radius: 8px; object-fit: cover; }
         .actor-profile-name { font-family: 'Orbitron'; color: var(--imdb-yellow); font-size: 26px; font-weight: 900; text-align: center; margin: 0; }
         .actor-profile-info { font-size: 14px; color: #ccc; text-align: center; margin-top: 10px; line-height: 1.6; }
-        .actor-back-btn { display: inline-block; padding: 10px 15px; background: rgba(245, 197, 24, 0.2); color: var(--imdb-yellow); border: 1px solid var(--imdb-yellow); border-radius: 6px; font-weight: 700; cursor: pointer; margin: 15px; transition: all 0.3s ease; }
-        .actor-back-btn:active { transform: scale(0.95); background: rgba(245, 197, 24, 0.4); }
-        .actor-profile-container { padding-bottom: 20px; }
         .filmography-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 15px 15px; }
         
         textarea { width: 100%; background: #111; color: white; border: 1px solid #333; border-radius: 8px; padding: 15px; box-sizing: border-box; min-height: 120px; font-family: 'Inter'; margin-top: 10px; }
@@ -335,100 +332,9 @@ padding-top: 15px;
             background: rgba(255, 255, 255, 0.3); 
             transform: scale(0.95);
         }
-
-        /* --- Google Login Page --- */
-        #login-page {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        }
-
-        .login-container {
-            background: rgba(30, 30, 30, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px 30px;
-            max-width: 350px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-        }
-
-        .login-title {
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--imdb-yellow);
-            margin-bottom: 10px;
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 2px;
-        }
-
-        .login-subtitle {
-            font-size: 14px;
-            color: #a2a2a2;
-            margin-bottom: 30px;
-        }
-
-        .google-signin-btn {
-            width: 100%;
-            height: 50px;
-            background: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .google-signin-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .google-signin-btn:active {
-            transform: translateY(0);
-        }
-
-        .google-signin-btn img {
-            width: 20px;
-            height: 20px;
-        }
     </style>
 </head>
 <body>
-
-    <!-- Google Login Page -->
-    <div id="login-page" style="display: none;">
-        <div class="login-container">
-            <div class="login-title">CINESCORE</div>
-            <div class="login-subtitle">Évaluez vos films préférés</div>
-            <div id="g_id_onload" data-client_id="497633281071-1vbr3g3ns8e86sqnpskc9dvpgouku1um.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="dark" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left" data-width="300"></div>
-            <div style="margin-top: 20px;">
-                <div style="font-size: 12px; color: #999; margin-bottom: 15px;">Ou connectez-vous avec un email</div>
-                <button class="google-signin-btn" onclick="alert('Fonctionnalité à venir - Utilisez Google Sign-In pour le moment')">
-                    📧 Continuer avec Email
-                </button>
-            </div>
-        </div>
-    </div>
 
     <div class="settings-btn" onclick="openSettings()" title="Paramètres">⚙️</div>
     <div class="user-profile-crown">
@@ -1067,12 +973,14 @@ padding-top: 15px;
 
                 html += `<div class="movie-info-bar"><div class="movie-info-main"><h2>${m.title || 'Film sans titre'}</h2><div class="movie-metadata">${metadata}</div></div><div class="score-badge-xxl ${colorClass}">${m.vote_average ? Math.round(m.vote_average) : '?'}</div></div>`;
 
-                html += `<div class="rating-container" id="ratingContainer"><div class="rating-simple" id="ratingSimple"><button class="favorite-btn ${(isFav = isFavorite('movie', id)) ? 'active' : ''}" onclick="toggleFavorite('movie', ${id}, '${(m.title || '').replace(/'/g, "\"")}', '${m.poster_path || ''}')">🌟 À VOIR</button><button class="save-rating-btn" id="noteBtn" onclick="showRatingUI()">NOTER CE FILM</button></div><div class="rating-advanced" id="ratingAdvanced" style="display:none;"><div class="star-rating" id="userRating" onmouseleave="resetStarColors()">`;
+                html += `<div class="rating-container"><div class="star-rating" id="userRating" onmouseleave="resetStarColors()">`;
                 for (let i = 1; i <= 10; i++) {
                     const isActive = userReview && userReview.note >= i ? 'active' : '';
                     html += `<span class="star ${isActive}" onclick="selectRating(${i})" onmouseover="previewStarColors(${i})">★</span>`;
                 }
-                html += `</div><div class="rating-text" id="ratingText">${userReview ? getRatingText(userReview.note) : 'Cliquez pour noter...'}</div><div style="display:flex; gap:10px; margin-top:15px;"><button class="save-rating-btn ${userReview ? getRatingColorClass(userReview.note) : ''}" id="noteConfirmBtn" onclick="saveMovieRating('${m.title}', '${m.poster_path || ''}', 'movie')">Confirmer la note</button><button class="cancel-btn" onclick="hideRatingUI()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700;">Annuler</button></div></div></div>`;
+                const isFav = isFavorite('movie', id);
+                const ratingButtonColor = userReview ? getRatingColorClass(userReview.note) : '';
+                html += `</div><div class="rating-text" id="ratingText">${userReview ? getRatingText(userReview.note) : 'Cliquez pour noter...'}</div><div class="rating-buttons"><button class="save-rating-btn ${ratingButtonColor}" id="noteBtn" onclick="saveMovieRating('${m.title}', '${m.poster_path || ''}', 'movie')">NOTER</button><button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('movie', ${id}, '${(m.title || '').replace(/'/g, "\"")}', '${m.poster_path || ''}')">🌟 À VOIR</button></div></div>`;
                 window.currentRating = userReview ? userReview.note : null;
 
                 if (c.cast && c.cast.length > 0) {
@@ -1129,26 +1037,12 @@ padding-top: 15px;
             });
             document.getElementById('ratingText').textContent = getRatingText(rating);
             // Changer la couleur du bouton NOTER
-            const noteBtn = document.getElementById('noteConfirmBtn');
+            const noteBtn = document.getElementById('noteBtn');
             if (noteBtn) {
                 noteBtn.classList.remove('color-green', 'color-blue', 'color-orange', 'color-red');
                 noteBtn.classList.add(getRatingColorClass(rating));
             }
             window.currentRating = rating;
-        }
-
-        function showRatingUI() {
-            const ratingSimple = document.getElementById('ratingSimple');
-            const ratingAdvanced = document.getElementById('ratingAdvanced');
-            if (ratingSimple) ratingSimple.style.display = 'none';
-            if (ratingAdvanced) ratingAdvanced.style.display = 'block';
-        }
-
-        function hideRatingUI() {
-            const ratingSimple = document.getElementById('ratingSimple');
-            const ratingAdvanced = document.getElementById('ratingAdvanced');
-            if (ratingSimple) ratingSimple.style.display = 'block';
-            if (ratingAdvanced) ratingAdvanced.style.display = 'none';
         }
         
         function previewStarColors(previewRating) {
@@ -1328,12 +1222,14 @@ padding-top: 15px;
 
                 html += `<div class="movie-info-bar"><div class="movie-info-main"><h2>${m.name || 'Série sans titre'}</h2><div class="movie-metadata">${metadata}</div></div><div class="score-badge-xxl ${colorClass}">${m.vote_average ? Math.round(m.vote_average) : '?'}</div></div>`;
 
-                html += `<div class="rating-container" id="ratingContainer"><div class="rating-simple" id="ratingSimple"><button class="favorite-btn ${(isFav = isFavorite('tv', id)) ? 'active' : ''}" onclick="toggleFavorite('tv', ${id}, '${(m.name || '').replace(/'/g, "\"")}', '${m.poster_path || ''}')">🌟 À VOIR</button><button class="save-rating-btn" id="noteBtn" onclick="showRatingUI()">NOTER CETTE SÉRIE</button></div><div class="rating-advanced" id="ratingAdvanced" style="display:none;"><div class="star-rating" id="userRating" onmouseleave="resetStarColors()">`;
+                html += `<div class="rating-container"><div class="star-rating" id="userRating" onmouseleave="resetStarColors()">`;
                 for (let i = 1; i <= 10; i++) {
                     const isActive = userReview && userReview.note >= i ? 'active' : '';
                     html += `<span class="star ${isActive}" onclick="selectRating(${i})" onmouseover="previewStarColors(${i})">★</span>`;
                 }
-                html += `</div><div class="rating-text" id="ratingText">${userReview ? getRatingText(userReview.note) : 'Cliquez pour noter...'}</div><div style="display:flex; gap:10px; margin-top:15px;"><button class="save-rating-btn ${userReview ? getRatingColorClass(userReview.note) : ''}" id="noteConfirmBtn" onclick="saveMovieRating('${m.name}', '${m.poster_path || ''}', 'tv')">Confirmer la note</button><button class="cancel-btn" onclick="hideRatingUI()" style="flex:1; padding:10px; background:#333; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700;">Annuler</button></div></div></div>`;
+                const isFav = isFavorite('tv', id);
+                const ratingButtonColor = userReview ? getRatingColorClass(userReview.note) : '';
+                html += `</div><div class="rating-text" id="ratingText">${userReview ? getRatingText(userReview.note) : 'Cliquez pour noter...'}</div><div class="rating-buttons"><button class="save-rating-btn ${ratingButtonColor}" id="noteBtn" onclick="saveMovieRating('${m.name}', '${m.poster_path || ''}', 'tv')">NOTER</button><button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('tv', ${id}, '${(m.name || '').replace(/'/g, "\"")}', '${m.poster_path || ''}')">🌟 À VOIR</button></div></div>`;
                 window.currentRating = userReview ? userReview.note : null;
 
                 if (c.cast && c.cast.length > 0) {
@@ -1434,7 +1330,7 @@ padding-top: 15px;
                 const countryCode = birthPlace.match(/^.*[,]\s*([A-Z]{2})$/)?.[1] || 'US';
                 const countryEmoji = getCountryEmoji(countryCode);
                 
-                let html = `<div class="actor-profile-container"><div class="actor-back-btn" onclick="closeModal()">‹ Retour à l'accueil</div><div class="actor-profile-header">`;
+                let html = `<div class="actor-profile-header">`;
                 html += `<img src="${p.profile_path ? IMG_PATH + p.profile_path : 'https://via.placeholder.com/150x150?text=No+Photo'}" class="actor-profile-photo" alt="${p.name || 'Acteur'}">  `;
                 html += `<h2 class="actor-profile-name">${p.name || 'Inconnu'}</h2>`;
                 html += `<div class="actor-profile-info">`;
@@ -2144,75 +2040,6 @@ padding-top: 15px;
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-
-// Google Sign-In
-// 1. UNE SEULE FONCTION ICI
-        function handleCredentialResponse(response) {
-            console.log("Tentative de connexion...");
-            try {
-                // Décodage des infos Google
-                const decoded = JSON.parse(atob(response.credential.split('.')[1]));
-                
-                window.db = window.db || {};
-                window.db.user = {
-                    displayName: decoded.name,
-                    email: decoded.email,
-                    avatar: decoded.picture,
-                    username: '@' + decoded.email.split('@')[0]
-                };
-
-                // ON FORCE L'ENTRÉE DANS L'APP
-                hideLoginPage(); 
-                renderSorties();
-                
-                // On synchronise avec Firebase après
-                if (typeof syncFirebase === "function") {
-                    syncFirebase();
-                }
-
-            } catch (e) {
-                alert("Erreur technique : " + e.message);
-            }
-        }
-
-        // 2. VÉRIFIE QUE CETTE FONCTION EST JUSTE EN DESSOUS
-        function hideLoginPage() {
-            const loginPage = document.getElementById('login-page');
-            if (loginPage) {
-                loginPage.style.display = 'none';
-            }
-        }
-
-        function showLoginPage() {
-            const loginPage = document.getElementById('login-page');
-            if (loginPage) {
-                loginPage.style.display = 'flex';
-            }
-        }
-
-        // Vérifier si l'utilisateur est authentifié au chargement
-// Vérifier si l'utilisateur est authentifié de manière sécurisée
-function checkAuthentication() {
-    // On vérifie d'abord si db existe, puis si db.user existe
-    if (window.db && db.user && (db.user.email || db.user.displayName)) {
-        hideLoginPage();
-        return true;
-    } else {
-        showLoginPage();
-        return false;
-    }
-}
-
-// Charger les données et vérifier l'authentification au démarrage
-loadData().then(() => {
-    const isAuthenticated = checkAuthentication();
-    if (isAuthenticated) {
-        renderSorties();
-    }
-}).catch(error => {
-    console.error("Erreur lors du chargement des données :", error);
-});
     </script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>
